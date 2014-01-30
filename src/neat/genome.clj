@@ -56,7 +56,12 @@
 
 (defn- weight-diff
   [^Genome g1 ^Genome g2]
-  1)
+  (let [ab-set (clojure.set/intersection (set (mapv :innov (:connection-genes g1)))
+                                         (set (mapv :innov (:connection-genes g2))))
+        a (vec (filter #(ab-set (:innov %)) (:connection-genes g1)))
+        b (vec (filter #(ab-set (:innov %)) (:connection-genes g2)))]
+    (/ (reduce + (map #(Math/abs (- (:weight %1) (:weight %2))) a b))
+       (count a))))
 
 (defn delta
   [^Genome g1 ^Genome g2]

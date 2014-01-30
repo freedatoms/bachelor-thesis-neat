@@ -22,7 +22,7 @@
                         (mapv (partial apply gene/->Connection-gene)
                               [[1 4 1.0 true  1]
                                [2 4 1.0 false 2]
-                               [3 4 1.0 true  3]
+                               [3 4 0.0 true  3]
                                [2 5 1.0 true  4]
                                [5 4 1.0 false 5]
                                [5 6 1.0 true  6]
@@ -36,7 +36,9 @@
   (deftest disjoint
     (is (= [[8] [6 7]] (#'neat.genome/disjoint genome1 genome2))))
   (deftest disjoint-count
-    (is (= 3 (#'neat.genome/disjoint-count genome1 genome2)))))
+    (is (= 3 (#'neat.genome/disjoint-count genome1 genome2))))
+  (deftest weight-diff
+    (is (= 0.2 (#'neat.genome/weight-diff genome1 genome2)))))
 
 
 
