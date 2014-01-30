@@ -34,7 +34,15 @@
   (deftest excess-count
     (is  (= 2 (#'neat.genome/excess-count genome1 genome2))))
   (deftest disjoint
-    (is (= [[6 7] [8]] (#'neat.genome/disjoint genome1 genome2))))
+    (is (= [[8] [6 7]] (#'neat.genome/disjoint genome1 genome2))))
   (deftest disjoint-count
     (is (= 3 (#'neat.genome/disjoint-count genome1 genome2)))))
+
+
+
+
+
+
+
+
 

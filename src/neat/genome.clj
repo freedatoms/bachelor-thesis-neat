@@ -25,7 +25,6 @@
                            ))]
     (->Genome nodes connections)))
 
-
 (defn- excess
   [^Genome g1 ^Genome g2]
   (let [lg1   (last (:connection-genes g1))
@@ -41,16 +40,13 @@
 
 (defn- disjoint
   [^Genome g1 ^Genome g2]
-  (let  [length (min (:innov (last (:connection-genes g1)))
-                     (:innov (last (:connection-genes g2))))
-         ]
-    (loop [cur (first (:connection-genes g1))
-           dis 0
-           rg1 (rest (:connection-genes g1))
-           rg2 (:connection-genes g2)]
-        )
-    ))
-
+  (let  [a (mapv :innov (:connection-genes g1))
+         b (mapv :innov (:connection-genes g2))
+         m (min (last a) (last b))
+         a-set (set a)
+         b-set (set b)]
+    [(vec (filter #(and (<= % m) (not (b-set %))) a))
+     (vec (filter #(and (<= % m) (not (a-set %))) b))]))
 
 (defn- disjoint-count
   [^Genome g1 ^Genome g2]
