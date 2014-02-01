@@ -1,6 +1,5 @@
 (ns neat.gene)
 
-
 (defrecord Node-gene
     [^int id
      type
@@ -13,10 +12,6 @@
      ^boolean enabled?
      ^int     innov
      ])
-
-(defn new-connection-gene
-  [in  out weight enabled? innov]
-  (Connection-gene. in out weight enabled? innov))
 
 (defn equal-but-innov?
   [^Connection-gene g1 ^Connection-gene g2]
