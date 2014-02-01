@@ -25,14 +25,38 @@
                            ))]
     (->Genome nodes connections)))
 
+(defn match-genes
+  [^Genome g1 ^Genome g2]
+  (loop [i1 (first (:connection-genes g1))
+         i2 (first (:connection-genes g2))
+         r1 (next (:connection-genes g1))
+         r2 (next (:connection-genes g2))
+         res []]
+    (if (or i1 i2)
+      (cond
+       (or (not (and i1 i2)) (= (:innov i1) (:innov i2))) (recur (first r1)
+                                                                 (first r2)
+                                                                 (next r1)
+                                                                 (next r2)
+                                                                 (conj res [i1 i2]))
+       (> (:innov i1) (:innov i2))  (recur i1
+                                           (first r2)
+                                           r1
+                                           (next r2)
+                                           (conj res [nil i2]))
+       (< (:innov i1) (:innov i2))  (recur (first r1)
+                                           i2
+                                           (next r1)
+                                           r2
+                                           (conj res [i1 nil])))
+      res)))
+
 (defn- excess
   [^Genome g1 ^Genome g2]
-  (let [lg1   (last (:connection-genes g1))
-        lg2   (last (:connection-genes g2))
-        [a b] (if (> (:innov lg1) (:innov lg2))
-                [lg2 g1]
-                [lg1 g2])]
-    (filter #(> (:innov %) (:innov a)) (:connection-genes b))))
+  (let [minG (min (:innov (last (:connection-genes g1)))
+               (:innov (last (:connection-genes g2))))
+        matchG (match-genes g1 g2)]
+    (mapv (fn [[x y]] (or x y)) (filter (fn [[x y]] (> (:innov (or x y)) minG)) matchG))))
 
 (defn- excess-count
   [^Genome g1 ^Genome g2]
@@ -40,19 +64,16 @@
 
 (defn- disjoint
   [^Genome g1 ^Genome g2]
-  (let  [a (mapv :innov (:connection-genes g1))
-         b (mapv :innov (:connection-genes g2))
-         m (min (last a) (last b))
-         a-set (set a)
-         b-set (set b)]
-    [(vec (filter #(and (<= % m) (not (b-set %))) a))
-     (vec (filter #(and (<= % m) (not (a-set %))) b))]))
+  (let [minG (min (:innov (last (:connection-genes g1)))
+               (:innov (last (:connection-genes g2))))
+        matchG (match-genes g1 g2)]
+    (mapv (fn [[x y]] (or x y)) (filter (fn [[x y]] (and (not (and x y))
+                                                       (<= (:innov (or x y)) minG)))
+                                       matchG))))
 
 (defn- disjoint-count
   [^Genome g1 ^Genome g2]
-  (-> (disjoint g1 g2)
-      flatten
-      count))
+  (count (disjoint g1 g2)))
 
 (defn- weight-diff
   [^Genome g1 ^Genome g2]
@@ -70,6 +91,7 @@
         (max (count (:connection-genes g1))
              (count (:connection-genes g2))))
      (* (weight-diff g1 g2) @ep/c3)))
+
 
 
 
