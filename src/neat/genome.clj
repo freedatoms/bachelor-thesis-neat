@@ -4,10 +4,8 @@
              [evolution-parameters :as ep]]))
 
 (defrecord Genome
-    [
-     node-genes
-     connection-genes
-     ])
+    [node-genes
+     connection-genes])
 
 (defn initial-genome
   [input-count output-count]

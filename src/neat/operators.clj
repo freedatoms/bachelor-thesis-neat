@@ -73,7 +73,7 @@
   [^neat.genome.Genome g]
   (let [rnd (Random.)
         randf (fn [w] (if (< (rand) @mutate-weights-perturb-prob)
-                          (+ (.nextGaussian rnd) w)
+                       (+ (* (.nextGaussian rnd) @mutate-weights-perturb-sigma) w)
                           (rand-weight)))]
     (genome/->Genome (:node-genes g) (mapv #(update-in  % [:weight] randf) (:connection-genes g)))))
 
@@ -96,6 +96,27 @@
        (prob-call @add-node-prob add-node)))
 
 (defn crossover
-  [^neat.genome.Genome g1 ^neat.genome.Genome g2]
-  )
+  "Takes two genomes and difference of fitnesses"
+  [^neat.genome.Genome g1 ^neat.genome.Genome g2 f1-f2]
+  (let [node-genes (if (< (count (:node-genes g1))
+                          (count (:node-genes g2)))
+                     (:node-genes g2)
+                     (:node-genes g1))
+        mg (genome/match-genes g1 g2)]
+    (genome/->Genome node-genes  (vec (filter (fn [x] x)
+                                              (cond
+                                               (> f1-f2 0) (mapv (fn [[x y :as arg]]
+                                                                   (cond
+                                                                    (and x y) (rand-nth arg)
+                                                                    x x
+                                                                    :else nil)) mg)
+                                               (< f1-f2 0) (mapv (fn [[x y :as arg]]
+                                                                   (cond
+                                                                    (and x y) (rand-nth arg)
+                                                                    y y
+                                                                    :else nil)) mg)
+                                               (= f1-f2 0) (mapv (fn [[x y :as arg]]
+                                                                   (if (and x y)
+                                                                     (rand-nth arg)
+                                                                     (or x y))) mg)))))))
 

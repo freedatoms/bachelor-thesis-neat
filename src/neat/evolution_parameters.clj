@@ -21,6 +21,9 @@
 (def mutate-weights-perturb-prob
   "Probability of weight perturbation (= P(perturb|mutate weights))"
   (ref 0.9))
+(def mutate-weights-perturb-sigma
+  "Sigma of mutate weights perturbation"
+  (ref 1.0))
 (def add-connection-prob
   "Probability of add-connection mutation"
   (ref 0.05))
