@@ -43,7 +43,9 @@
   (loop [cg (:connection-genes gen)
          res {:node-gene [:conn-gene]}]
     (if cg
-      (recur (next cg) (update-in res [(:in (first cg))] conj (:out (first cg))))
+      (if (:enabled? (first cg))
+        (recur (next cg) (update-in res [(:in (first cg))] conj (:out (first cg))))
+        (recur (next cg) res))
       res)))
 
 (defn- node-genes->records
@@ -61,19 +63,17 @@
                  (if (:enabled? %)
                    "enabled"
                    "disabled")
-                 (:weight %)) genes))
+                 (format "%.3f" (:weight %))) genes))
 
 (defn- -do-graphviz-fun
   [fun g]
-  (fun (into (mapv :id (:node-genes g)) [:conn-gene :node-gene]) (genome->graph g)
+  (fun (into (mapv :id (:node-genes g)) @ep/visualize-genome-with) (genome->graph g)
        :node->descriptor (fn [x]
                            (case x
                              :node-gene {:shape "record"
-                                         :label (node-genes->records (:node-genes g))
-                                         :rank "9999"}
+                                         :label (node-genes->records (:node-genes g))}
                              :conn-gene {:shape "record"
-                                         :label (conn-genes->records (:connection-genes g))
-                                         :rank "5"}
+                                         :label (conn-genes->records (:connection-genes g))}
                              {:label (str x),
                               :shape "circle",
                               :style "filled",
@@ -98,7 +98,9 @@
                               (case cluster
                                 :gene {:style "invis"}
                                 {:style "invis"}))
-       :options {:splines "polyline"}))
+       :options {:splines "polyline"
+                 :dpi "50"
+                 }))
 
 
 (defn initial-genome

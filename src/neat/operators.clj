@@ -22,7 +22,7 @@
       g
       (let [cg   (nth (:connection-genes g) gene)
             node-genes (conj (:node-genes g) (gene/->Node-gene ng :hidden))
-            conn-genes (assoc-in (:connection-genes g) [:connection-genes cg :enabled?] false)
+            conn-genes (assoc-in (:connection-genes g) [gene :enabled?] false)
             c1 (gene/->Connection-gene (:in cg) ng 1.0 true (or (@gene-pool [(:in cg) ng])
                                                                 (swap! innovation-number inc)))
             c2 (gene/->Connection-gene ng (:out cg) (:weight cg) true (or (@gene-pool [ng (:out cg)])
@@ -49,7 +49,7 @@
         out     (count (filter #{:output} (map :type (:node-genes g))))
         total   (count (:node-genes g))
         ins     (into (vec (range 1 (inc in))) (range (+ in out 1) (inc total)))
-        outs    (vec (range (inc in) (inc 10)))
+        outs    (vec (range (inc in) (inc total)))
         conns   (set (map #(vector (:in %) (:out %)) (:connection-genes g)))
         nc      (loop [conn (new-conn ins outs)
                        cnt  0]

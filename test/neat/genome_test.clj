@@ -2,7 +2,8 @@
   (:use [neat
          genome
          [gene :as gene]
-         graphviz-enabled]
+         graphviz-enabled
+         operators]
         [clojure
          test]))
 
@@ -47,10 +48,7 @@
   (deftest test-matching-genes
     (is (= [[1 1] [2 2] [3 3] [4 4] [5 5] [nil 6] [nil 7] [8 nil] [nil 9] [nil 10]]
            (mapv (fn [[i1 i2]] [(:innov i1) (:innov i2)])
-                 (time-of (neat.genome/match-genes genome1 genome2))))))
-  (deftest grapviz
-    #_(view genome1)
-    (view genome2)))
+                 (time-of (neat.genome/match-genes genome1 genome2)))))))
 
 
 

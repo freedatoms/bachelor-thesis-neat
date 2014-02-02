@@ -42,6 +42,10 @@
 
 
 
+;; Visualization
+(def visualize-genome-with
+  "Set to [] if you are only interested in shape of the neural net"
+  (ref [:conn-gene :node-gene]))
 
 
 ;;; internal
