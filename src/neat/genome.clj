@@ -1,11 +1,105 @@
 (ns neat.genome
   (:require [neat
              [gene :as gene]
-             [evolution-parameters :as ep]]))
+             [evolution-parameters :as ep]]
+            [rhizome
+             [viz :as viz]
+             [dot :as dot]])
+  (:use [neat graphviz-enabled]
+        [clojure.string :only (join)])
+  (:import [javax.swing
+            JFrame
+            ImageIcon]))
+
+(declare -do-graphviz-fun)
 
 (defrecord Genome
     [node-genes
-     connection-genes])
+     connection-genes]
+  GraphvizEnabled
+  (save-image [this filename]
+    )
+  (save-dot [this filename]
+    )
+  (view [this]
+    (-do-graphviz-fun viz/view-graph this))
+  (view [this frame]
+    (let [[^JFrame frame ^ImageIcon image-icon] @frame]
+      (.setTitle frame "Genome")
+      (.setImage image-icon (-do-graphviz-fun viz/graph->image this))
+      (if (.isShowing frame)
+        (.repaint frame)
+        (.setVisible frame true))))
+  (view [this frame title]
+    (let [[^JFrame frame ^ImageIcon image-icon] @frame]
+      (.setTitle frame title)
+      (.setImage image-icon (-do-graphviz-fun viz/graph->image this))
+      (if (.isShowing frame)
+        (.repaint frame)
+        (.setVisible frame true)))))
+
+(defn- genome->graph
+  [^Genome gen]
+  (loop [cg (:connection-genes gen)
+         res {:node-gene [:conn-gene]}]
+    (if cg
+      (recur (next cg) (update-in res [(:in (first cg))] conj (:out (first cg))))
+      res)))
+
+(defn- node-genes->records
+  [genes]
+  (mapv #(vector (:id %) (case (:type %)
+                                     :input "input"
+                                     :bias "bias"
+                                     :hidden "hidden"
+                                     :output "output")) genes))
+
+(defn- conn-genes->records
+  [genes]
+  (mapv #(vector (:innov %)
+                 (format "%s -&gt; %s" (:in %) (:out %))
+                 (if (:enabled? %)
+                   "enabled"
+                   "disabled")
+                 (:weight %)) genes))
+
+(defn- -do-graphviz-fun
+  [fun g]
+  (fun (into (mapv :id (:node-genes g)) [:conn-gene :node-gene]) (genome->graph g)
+       :node->descriptor (fn [x]
+                           (case x
+                             :node-gene {:shape "record"
+                                         :label (node-genes->records (:node-genes g))
+                                         :rank "9999"}
+                             :conn-gene {:shape "record"
+                                         :label (conn-genes->records (:connection-genes g))
+                                         :rank "5"}
+                             {:label (str x),
+                              :shape "circle",
+                              :style "filled",
+                              :fillcolor (case (:type (nth (:node-genes g) (dec x)))
+                                           :input "#55ff55"
+                                           :bias "#aaffff"
+                                           :hidden "gray"
+                                           :output "#ff5555"
+                                           "white")}))
+       :edge->descriptor (fn [in _]
+                           (case in
+                             :node-gene {:style "invis"}
+                             {}))
+       :node->cluster (into {:node-gene :gene,
+                             :conn-gene :gene}
+                            (mapv #(vector (:id %) (case (:type %)
+                                                     :input :input
+                                                     :bias  :input
+                                                     :output :output
+                                                     nil)) (:node-genes g)))
+       :cluster->descriptor (fn [cluster]
+                              (case cluster
+                                :gene {:style "invis"}
+                                {:style "invis"}))
+       :options {:splines "polyline"}))
+
 
 (defn initial-genome
   [input-count output-count]
@@ -18,8 +112,8 @@
         innov (atom 0)
         connections (vec (for [in inputs
                                out (nthrest nodes (dec tmp))]
-                           (gene/new-connection-gene (:id in) (:id out) 1 true 
-                                                     (swap! innov inc))
+                           (gene/->Connection-gene (:id in) (:id out) 1 true 
+                                                   (swap! innov inc))
                            ))]
     (->Genome nodes connections)))
 

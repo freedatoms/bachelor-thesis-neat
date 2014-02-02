@@ -1,7 +1,8 @@
 (ns neat.genome-test
   (:use [neat
          genome
-         [gene :as gene]]
+         [gene :as gene]
+         graphviz-enabled]
         [clojure
          test]))
 
@@ -12,7 +13,7 @@
        (time ~expr)))
 
 (let [genome1 (->Genome (mapv (partial apply gene/->Node-gene)
-                              [[1 :input] [2 :input] [3 :input] [4 :output] [5 :hidden]])
+                              [[1 :bias] [2 :input] [3 :input] [4 :output] [5 :hidden]])
                         (mapv (partial apply gene/->Connection-gene)
                               [[1 4 1.0 true  1]
                                [2 4 1.0 false 2]
@@ -21,7 +22,8 @@
                                [5 4 1.0 true  5]
                                [1 5 1.0 true  8]]))
       genome2 (->Genome (mapv (partial apply gene/->Node-gene)
-                              [[1 :input] [2 :input] [3 :input] [4 :output] [5 :hidden]])
+                              [[1 :bias] [2 :input] [3 :input] [4 :output] [5 :hidden]
+                               [6 :hidden]])
                         (mapv (partial apply gene/->Connection-gene)
                               [[1 4 1.0 true  1]
                                [2 4 1.0 false 2]
@@ -45,7 +47,10 @@
   (deftest test-matching-genes
     (is (= [[1 1] [2 2] [3 3] [4 4] [5 5] [nil 6] [nil 7] [8 nil] [nil 9] [nil 10]]
            (mapv (fn [[i1 i2]] [(:innov i1) (:innov i2)])
-                 (time-of (neat.genome/match-genes genome1 genome2)))))))
+                 (time-of (neat.genome/match-genes genome1 genome2))))))
+  (deftest grapviz
+    #_(view genome1)
+    (view genome2)))
 
 
 
