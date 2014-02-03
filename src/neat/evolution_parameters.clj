@@ -14,6 +14,10 @@
   "Delta threshold for species separation"
   (ref 3.0))
 
+(def transfer-fun
+  "Activation(=tranfer) function"
+  (ref (fn [x] (/ 1 (+ 1 (Math/exp (* -4.9 x)))))))
+
 ;; Mutation
 (def mutate-weights-prob
   "Probability"
@@ -39,7 +43,6 @@
 (def interspecies-mating-prob
   "Probability of interspecies mating"
   (ref 0.001))
-
 
 
 ;; Visualization

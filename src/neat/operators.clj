@@ -36,11 +36,9 @@
 (defn- new-conn
   "Creates new tuple first item is from ins second from outs."
   [ins outs]
-  (loop [in (rand-nth ins)
-         out (rand-nth outs)]
-    (if (= in out)
-      (recur (rand-nth ins) (rand-nth outs))
-      [in out])))
+  (let [in (rand-nth ins)
+        out (rand-nth outs)]
+    [in out]))
 
 (defn- add-connection
   "Takes genome and adds one connection gene."

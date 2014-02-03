@@ -4,5 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [rhizome "0.2.0"]]
+                 [rhizome "0.2.0"]
+                 [aysylu/loom "0.4.2"]]
+  :aot [loom.graph]
   :main neat.core)
