@@ -31,7 +31,7 @@
                [(:in c1) (:out c1)] (:innov c1)
                [(:in c2) (:out c2)] (:innov c2))
         (genome/->Genome node-genes
-                    (into conn-genes [c1 c2]))))))
+                         (sort-by :innov (into conn-genes [c1 c2])))))))
 
 (defn- new-conn
   "Creates new tuple first item is from ins second from outs."
@@ -60,10 +60,18 @@
       g
       (let [node-genes (:node-genes g)
             c (gene/->Connection-gene (first nc) (second nc) (rand-weight) true (or (@gene-pool nc)
-                                                                                     (swap! innovation-number inc)))
+                                                                                    (swap! innovation-number inc)))
             conn-genes (conj (:connection-genes g) c)]
         (swap! gene-pool assoc nc (:innov c))
-        (genome/->Genome node-genes conn-genes)))))
+        (genome/->Genome node-genes (sort-by :innov conn-genes))))))
+
+(defn- clamp-weight
+  [weight]
+  (let [[lo hi] @weight-range]
+    (cond
+     (< weight lo) lo
+     (> weight hi) hi
+     :else weight)))
 
 (defn- mutate-weights
   "With probability of @mutate-weights-perturb-prob uniformly perturbs weight
@@ -71,8 +79,8 @@
   [^neat.genome.Genome g]
   (let [rnd (Random.)
         randf (fn [w] (if (< (rand) @mutate-weights-perturb-prob)
-                       (+ (* (.nextGaussian rnd) @mutate-weights-perturb-sigma) w)
-                          (rand-weight)))]
+                       (clamp-weight (+ (* (.nextGaussian rnd) @mutate-weights-perturb-sigma) w))
+                       (rand-weight)))]
     (genome/->Genome (:node-genes g) (mapv #(update-in  % [:weight] randf) (:connection-genes g)))))
 
 (defn- prob-call
@@ -117,4 +125,5 @@
                                                                    (if (and x y)
                                                                      (rand-nth arg)
                                                                      (or x y))) mg)))))))
+
 

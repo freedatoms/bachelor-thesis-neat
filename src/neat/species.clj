@@ -11,7 +11,7 @@
   (ref []))
 
 (def cur-pop
-  (ref [[1 2 3] [4 5 6] [7 8 9]]))
+  (ref []))
 
 (defn swap-pop []
   (dosync
@@ -38,7 +38,6 @@
        (alter cur-pop update-in [idx] conj gen))
       (dosync
        (alter cur-pop update-in [idx] conj gen)))))
-
 
 (defn fitness-share
   [genome fitness]

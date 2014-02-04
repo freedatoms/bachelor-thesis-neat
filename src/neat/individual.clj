@@ -31,5 +31,5 @@
   {:pre [(or (and inputs outputs) genome)]}
   (let [gen (or genome (genome/initial-genome inputs outputs))
         raw-fit (@fitness-fun gen)
-        fit     (species/fitness-share gen raw-fit)]
+        fit     0.0]
     (->Individual gen raw-fit fit)))

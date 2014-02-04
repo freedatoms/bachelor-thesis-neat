@@ -127,17 +127,23 @@
                                    (or inr inputs)
                                    (or outr outs)
                                    (conj connset [(:id in) (:id out)])
-                                   (conj res (gene/->Connection-gene
-                                              (:id in) (:id out)
-                                              (ep/rand-weight) true i)))
-                            [connset res])))
-        innov (atom (count res))]
+                                   (let [gene (gene/->Connection-gene
+                                               (:id in) (:id out)
+                                               (ep/rand-weight) true
+                                               (or (@ep/gene-pool [(:id in) (:id out)])
+                                                   (swap! ep/innovation-number inc)))]
+                                     (swap! ep/gene-pool assoc [(:id in) (:id out)] (:innov gene))
+                                     (conj res gene)))
+                            [connset res])))]
     (vec (flatten* (conj res (for [in (shuffle inputs)
                                    out (shuffle outputs)]
                                (if (and (< (rand) @ep/connection-density)
                                         (not (connset [(:id in) (:id out)])))
-                                 (gene/->Connection-gene (:id in) (:id out) (ep/rand-weight) true 
-                                                         (swap! innov inc)))))))))
+                                 (let [gene (gene/->Connection-gene (:id in) (:id out) (ep/rand-weight) true 
+                                                                    (or (@ep/gene-pool [(:id in) (:id out)])
+                                                                        (swap! ep/innovation-number inc)))]
+                                   (swap! ep/gene-pool assoc [(:id in) (:id out)] (:innov gene))
+                                   gene))))))))
 
 (defn initial-genome
   [input-count output-count]
@@ -149,7 +155,7 @@
                           (range output-count)))
         innov (atom 0)
         connections (gen-connections inputs (nthrest nodes (dec tmp)))]
-    (->Genome nodes connections)))
+    (->Genome nodes (sort-by :innov connections))))
 
 (defn match-genes
   [^Genome g1 ^Genome g2]
@@ -203,12 +209,15 @@
 
 (defn- weight-diff
   [^Genome g1 ^Genome g2]
-  (let [ab-set (clojure.set/intersection (set (mapv :innov (:connection-genes g1)))
-                                         (set (mapv :innov (:connection-genes g2))))
-        a (vec (filter #(ab-set (:innov %)) (:connection-genes g1)))
-        b (vec (filter #(ab-set (:innov %)) (:connection-genes g2)))]
-    (/ (reduce + (map #(Math/abs (- (:weight %1) (:weight %2))) a b))
-       (count a))))
+  (let [matches (filter (fn [[x y]]
+                          (and x y))
+                        (match-genes g1 g2))
+        cnt (count matches)]
+    (if (= cnt 0)
+      0
+      (/ (reduce + (map (fn [[x y]]
+                          (Math/abs (- (:weight x) (:weight y)))) matches))
+         cnt))))
 
 (defn delta
   [^Genome g1 ^Genome g2]
