@@ -18,14 +18,17 @@
      connection-genes]
   GraphvizEnabled
   (save-image [this filename]
-    )
+    (viz/save-image (-do-graphviz-fun
+                     viz/graph->image
+                     this)
+                    filename))
   (save-dot [this filename]
-    )
+    (spit filename
+          (-do-graphviz-fun dot/graph->dot this)))
   (view [this]
-    (-do-graphviz-fun viz/view-graph this))
+    (view this (viz/create-frame "Neural Net")))
   (view [this frame]
     (let [[^JFrame frame ^ImageIcon image-icon] @frame]
-      (.setTitle frame "Genome")
       (.setImage image-icon (-do-graphviz-fun viz/graph->image this))
       (if (.isShowing frame)
         (.repaint frame)
@@ -77,6 +80,9 @@
                              {:label (str x),
                               :shape "circle",
                               :style "filled",
+                              :fixedsize "true"
+                              :width "0.5"
+                              :height "0.5"
                               :fillcolor (case (:type (nth (:node-genes g) (dec x)))
                                            :input "#55ff55"
                                            :bias "#aaffff"
@@ -99,9 +105,39 @@
                                 :gene {:style "invis"}
                                 {:style "invis"}))
        :options {:splines "polyline"
-                 :dpi "50"
-                 }))
+                 :dpi "50"}))
 
+
+(defn- flatten* [x]
+  (filter #(and % (not (sequential? %)))
+          (rest (tree-seq sequential? seq x))))
+
+(defn- gen-connections
+  [inputs outputs]
+  (let [[connset res] (let [maxn (max (count inputs)
+                                      (count outputs))
+                            outs (shuffle outputs)]
+                        (loop [i            0
+                               [in & inr]   inputs
+                               [out & outr] outs
+                               connset      #{}
+                               res          []]
+                          (if (< i maxn)
+                            (recur (inc i)
+                                   (or inr inputs)
+                                   (or outr outs)
+                                   (conj connset [(:id in) (:id out)])
+                                   (conj res (gene/->Connection-gene
+                                              (:id in) (:id out)
+                                              (ep/rand-weight) true i)))
+                            [connset res])))
+        innov (atom (count res))]
+    (vec (flatten* (conj res (for [in (shuffle inputs)
+                                   out (shuffle outputs)]
+                               (if (and (< (rand) @ep/connection-density)
+                                        (not (connset [(:id in) (:id out)])))
+                                 (gene/->Connection-gene (:id in) (:id out) (ep/rand-weight) true 
+                                                         (swap! innov inc)))))))))
 
 (defn initial-genome
   [input-count output-count]
@@ -112,11 +148,7 @@
                     (mapv #(gene/->Node-gene (+ % tmp) :output)
                           (range output-count)))
         innov (atom 0)
-        connections (vec (for [in inputs
-                               out (nthrest nodes (dec tmp))]
-                           (gene/->Connection-gene (:id in) (:id out) 1 true 
-                                                   (swap! innov inc))
-                           ))]
+        connections (gen-connections inputs (nthrest nodes (dec tmp)))]
     (->Genome nodes connections)))
 
 (defn match-genes

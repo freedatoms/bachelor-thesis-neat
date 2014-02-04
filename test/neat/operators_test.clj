@@ -54,6 +54,7 @@
             (last (take 11 (iterate mutation genome1)))
             (last (take 11 (iterate mutation genome2)))
             0)))
-    ))
+    )
+  (view genome2))
 
 

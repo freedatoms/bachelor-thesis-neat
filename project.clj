@@ -7,4 +7,5 @@
                  [rhizome "0.2.0"]
                  [aysylu/loom "0.4.2"]]
   :aot [loom.graph]
+  :java-source-paths ["java/src"] 
   :main neat.core)

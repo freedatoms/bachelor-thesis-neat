@@ -13,10 +13,18 @@
 (def dt
   "Delta threshold for species separation"
   (ref 3.0))
-
 (def transfer-fun
   "Activation(=tranfer) function"
   (ref (fn [x] (/ 1 (+ 1 (Math/exp (* -4.9 x)))))))
+
+;; Creation
+(def connection-density
+  "How many connections are created in initial population.
+   If set to 0 only max(in+1,out) connections will be created"
+  (ref 0.1))
+(def fitness-fun
+  "Fitness function"
+  (ref (fn [_] (throw (Exception. "Fitness function is not set")))))
 
 ;; Mutation
 (def mutate-weights-prob

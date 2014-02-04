@@ -15,6 +15,11 @@
   `(do (printf "'%s': "  (first '~expr))
        (time ~expr)))
 
+(defn- almost-equal
+  [a b & {:keys [threshold]
+          :or {threshold 0.000000001}}]
+  (> threshold (/ (reduce + (map #(Math/abs (- %1 %2)) a b)) (count a))))
+
 (let [genome1 (->Genome (mapv (partial apply gene/->Node-gene)
                               [[1 :bias] [2 :input] [3 :input] [4 :output] [5 :hidden]])
                         (mapv (partial apply gene/->Connection-gene)
@@ -47,7 +52,19 @@
             {[1 6] 0.2, [3 5] 0.1, [6 4] 0.9, [5 6] 0.8, [2 5] 0.6, [3 4] 0.5, [1 4] 0.3}]
            (#'neat.neural-net/prepare-genome genome2))))
   (deftest evaluate-neural-net-test
-    (is (= (evaluate-neural-net genome1 [0 2]) [0.4993491791199091]))
-    (is (= (evaluate-neural-net genome1 [10 0]) [0.9926064649677614]))
-    (is (= (evaluate-neural-net genome1 [-100 -100]) [0.9999425065162432]))
-    (is (= (evaluate-neural-net genome1 [1 -10]) [0.9999445358530918]))))
+    (is (almost-equal (evaluate-neural-net genome1 [0 2])
+                      (evaluate-neural-net-with-activation-cycles genome1 [0 2] 10)))
+    (is (almost-equal (evaluate-neural-net genome1 [10 0])
+                      (evaluate-neural-net-with-activation-cycles genome1 [10 0] 10)))
+    (is (almost-equal (evaluate-neural-net genome1 [-100 -100])
+                      (evaluate-neural-net-with-activation-cycles genome1 [-100 -100] 10)))
+    (is (almost-equal (evaluate-neural-net genome1 [1 -10])
+                      (evaluate-neural-net-with-activation-cycles genome1 [1 -10] 10)))
+    (is (almost-equal (evaluate-neural-net genome2 [0 2])
+                      (evaluate-neural-net-with-activation-cycles genome2 [0 2] 10)))
+    (is (almost-equal (evaluate-neural-net genome2 [10 0])
+                      (evaluate-neural-net-with-activation-cycles genome2 [10 0] 10)))
+    (is (almost-equal (evaluate-neural-net genome2 [-100 -100])
+                      (evaluate-neural-net-with-activation-cycles genome2 [-100 -100] 10)))
+    (is (almost-equal (evaluate-neural-net genome2 [1 -10])
+                      (evaluate-neural-net-with-activation-cycles genome2 [1 -10] 10)))))
