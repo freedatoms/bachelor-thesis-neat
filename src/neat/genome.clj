@@ -155,7 +155,7 @@
                           (range output-count)))
         innov (atom 0)
         connections (gen-connections inputs (nthrest nodes (dec tmp)))]
-    (->Genome nodes (sort-by :innov connections))))
+    (->Genome nodes (vec (sort-by :innov connections)))))
 
 (defn match-genes
   [^Genome g1 ^Genome g2]
@@ -186,7 +186,7 @@
 (defn- excess
   [^Genome g1 ^Genome g2]
   (let [minG (min (:innov (last (:connection-genes g1)))
-               (:innov (last (:connection-genes g2))))
+                  (:innov (last (:connection-genes g2))))
         matchG (match-genes g1 g2)]
     (mapv (fn [[x y]] (or x y)) (filter (fn [[x y]] (> (:innov (or x y)) minG)) matchG))))
 

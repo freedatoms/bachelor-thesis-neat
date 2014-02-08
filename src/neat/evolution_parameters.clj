@@ -1,69 +1,122 @@
 (ns neat.evolution-parameters)
 
+(defrecord Option
+    [name
+     var
+     description 
+     type
+     range])
 
-(def c1
+(def options (atom []))
+
+(defmacro defoption
+  "Creates an option"
+  [name description default-value 
+   &{:keys [type range title]
+     :or {type :float}}]
+  (let [titl (or title (str name))
+        rang (or range (case type
+                         :probability [0.0 1.0]
+                         nil))]
+    `(do
+       (def ~name ~description (ref ~default-value))
+       (swap! options conj (Option. ~titl ~name ~description ~type ~rang)))))
+
+;; Evolution parameters
+(defoption c1
   "Excess gene importance in delta function"
-  (ref 1.0))
-(def c2
+   1.0
+  :type :float)
+(defoption c2
   "Disjoint gene importance in delta function"
-  (ref 1.0))
-(def c3
+   1.0
+  :type :float)
+(defoption c3
   "Weight difference importance in delta function"
-  (ref 0.4))
-(def dt
+   0.4
+  :type :float)
+(defoption dt
   "Delta threshold for species separation"
-  (ref 3.0))
-(def transfer-fun
+   3.0
+  :type :float)
+(defoption transfer-fun
   "Activation(=tranfer) function"
-  (ref (fn [x] (/ 1 (+ 1 (Math/exp (* -4.9 x)))))))
+   (fn [x] (/ 1 (+ 1 (Math/exp (* -4.9 x)))))
+  :type :function
+  :title "Transfer function")
+(defoption survival-rate-in-species 
+  "Specifies how many individui should survive the elimination 
+   of the lowest performing members in every species. 
+
+   Number of surviving members of species is ceil(#ind * survival rate), 
+   this way at least one individual survives."
+   0.85
+  :type :probability)
+(defoption weight-range
+  "Lower and upper bound"
+  [-1.0 1.0]
+  :type :range)
 
 ;; Creation
-(def connection-density
+(defoption connection-density
   "How many connections are created in initial population.
    If set to 0 only max(in+1,out) connections will be created"
-  (ref 0.1))
-(def fitness-fun
+   0.1
+  :type :probability)
+(defoption fitness-fun
   "Fitness function"
-  (ref (fn [_] (throw (Exception. "Fitness function is not set")))))
+  (fn [_] (throw (Exception. "Fitness function is not set")))
+  :type :function)
 
 ;; Mutation
-(def mutate-weights-prob
-  "Probability"
-  (ref 0.8))
-(def mutate-weights-perturb-prob
+(defoption mutation-prob
+  "Probability of mutation"
+  0.5
+  :type :probability)
+(defoption mutate-weights-prob
+  "Probability of mutating weights"
+  0.8
+  :type :probability)
+(defoption mutate-weights-perturb-prob
   "Probability of weight perturbation (= P(perturb|mutate weights))"
-  (ref 0.9))
-(def mutate-weights-perturb-sigma
+  0.9
+  :type :probability)
+(defoption mutate-weights-perturb-sigma
   "Sigma of mutate weights perturbation"
-  (ref 1.0))
-(def add-connection-prob
+  1.0
+  :type :probability)
+(defoption add-connection-prob
   "Probability of add-connection mutation"
-  (ref 0.05))
-(def add-node-prob
+  0.05
+  :type :probability)
+(defoption add-node-prob
   "Probability of add-node mutation"
-  (ref 0.03))
+  0.03
+  :type :probability)
 
 
 ;; Crossover
-(def crossover-prob
+(defoption crossover-prob
   "Probability of crossover"
-  (ref 0.75))
-(def interspecies-mating-prob
+  0.75
+  :type :probability)
+(defoption interspecies-mating-prob
   "Probability of interspecies mating"
-  (ref 0.001))
-
+  0.001
+  :type :probability)
+(defoption disable-in-crossover
+  "Probability of being disabled when either parent gene is"
+  0.75
+  :type :probability)
 
 ;; Visualization
-(def visualize-genome-with
+(defoption visualize-genome-with
   "Set to [] if you are only interested in shape of the neural net"
-  (ref [:conn-gene :node-gene]))
-
+  [:conn-gene :node-gene]
+  :type :any-of
+  :range [:conn-gene :node-gene])
 
 ;;; internal
-(def weight-range
-  "Lower and upper bound"
-  (ref [-1.0 1.0]))
-
 (def innovation-number
   "Used for historical markings"
   (atom 0))

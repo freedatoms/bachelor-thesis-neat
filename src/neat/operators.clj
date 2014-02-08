@@ -31,7 +31,7 @@
                [(:in c1) (:out c1)] (:innov c1)
                [(:in c2) (:out c2)] (:innov c2))
         (genome/->Genome node-genes
-                         (sort-by :innov (into conn-genes [c1 c2])))))))
+                         (vec (sort-by :innov (into conn-genes [c1 c2]))))))))
 
 (defn- new-conn
   "Creates new tuple first item is from ins second from outs."
@@ -63,7 +63,7 @@
                                                                                     (swap! innovation-number inc)))
             conn-genes (conj (:connection-genes g) c)]
         (swap! gene-pool assoc nc (:innov c))
-        (genome/->Genome node-genes (sort-by :innov conn-genes))))))
+        (genome/->Genome node-genes (vec (sort-by :innov conn-genes)))))))
 
 (defn- clamp-weight
   [weight]
@@ -97,9 +97,9 @@
    Adds node with probability of @add-node-prob."
   [^neat.genome.Genome g]
   (->> g   
-       (prob-call @mutate-weights-prob mutate-weights)
-       (prob-call @add-connection-prob add-connection)
-       (prob-call @add-node-prob add-node)))
+       (prob-call @mutate-weights-prob   mutate-weights)
+       (prob-call @add-connection-prob   add-connection)
+       (prob-call @add-node-prob         add-node)))
 
 (defn crossover
   "Takes two genomes and difference of fitnesses"
@@ -109,7 +109,7 @@
                      (:node-genes g2)
                      (:node-genes g1))
         mg (genome/match-genes g1 g2)]
-    (genome/->Genome node-genes  (vec (filter (fn [x] x)
+    (genome/->Genome node-genes  (vec (filter identity
                                               (cond
                                                (> f1-f2 0) (mapv (fn [[x y :as arg]]
                                                                    (cond
@@ -121,9 +121,12 @@
                                                                     (and x y) (rand-nth arg)
                                                                     y y
                                                                     :else nil)) mg)
-                                               (= f1-f2 0) (mapv (fn [[x y :as arg]]
-                                                                   (if (and x y)
-                                                                     (rand-nth arg)
-                                                                     (or x y))) mg)))))))
+                                               :else (mapv (fn [[x y :as arg]]
+                                                             (if (and x y)
+                                                               (if (not (and (:enabled? x)
+                                                                             (:enabled? y))) 
+                                                                 (assoc (rand-nth arg) :enabled?  (< (rand) @disable-in-crossover))
+                                                                 (rand-nth arg))
+                                                               (or x y))) mg)))))))
 
 

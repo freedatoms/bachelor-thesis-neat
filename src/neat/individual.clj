@@ -1,7 +1,6 @@
 (ns neat.individual
   (:require [neat
-             [genome :as genome]
-             [species :as species]]
+             [genome :as genome]]
             [rhizome
              [viz :as viz]])
   (:use [neat
