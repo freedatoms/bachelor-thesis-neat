@@ -31,6 +31,5 @@
   [& {:keys [genome inputs outputs]}]
   {:pre [(or (and inputs outputs) genome)]}
   (let [gen (or genome (genome/initial-genome inputs outputs))
-        [raw-fit success?] (@fitness-fun gen)
-        fit     0.0]
-    (->Individual gen raw-fit fit success?)))
+        [raw-fit success?] (@fitness-fun gen)]
+    (->Individual gen raw-fit 0 0 success?)))

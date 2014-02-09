@@ -69,8 +69,8 @@
   :type :function)
 
 ;; Mutation
-(defoption mutation-prob
-  "Probability of mutation"
+(defoption mutate-only-prob
+  "Probability of only mutation"
   0.5
   :type :probability)
 (defoption mutate-weights-prob
@@ -96,8 +96,8 @@
 
 
 ;; Crossover
-(defoption crossover-prob
-  "Probability of crossover"
+(defoption mate-only-prob
+  "Probability of only mating"
   0.75
   :type :probability)
 (defoption interspecies-mating-prob
