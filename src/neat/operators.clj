@@ -96,10 +96,13 @@
    Adds connection with probability of @add-connection-prob.
    Adds node with probability of @add-node-prob."
   [^neat.genome.Genome g]
-  (->> g   
-       (prob-call @mutate-weights-prob   mutate-weights)
-       (prob-call @add-connection-prob   add-connection)
-       (prob-call @add-node-prob         add-node)))
+  (if (< (rand) @add-node-prob)
+    (add-node g)
+    (if (< (rand) @add-connection-prob)
+      (add-connection g)
+      (if (< (rand) @mutate-weights-prob)
+        (mutate-weights g)
+        g))))
 
 (defn crossover
   "Takes two genomes and difference of fitnesses"

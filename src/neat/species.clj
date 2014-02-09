@@ -11,9 +11,18 @@
 (def cur-pop
   (ref []))
 
+(defn- get-representants
+  []
+  (loop [[cp & cpr] @cur-pop
+         [lp & lpr] @last-pop
+         res []]
+    (if cp
+      (recur cpr lpr (conj res (or (if (> (count cp) 0) (:genome (rand-nth cp))) lp)))
+      res)))
+
 (defn swap-pop []
   (dosync
-   (ref-set last-pop (mapv (comp :genome rand-nth) @cur-pop))
+   (ref-set last-pop (get-representants))
    (ref-set cur-pop (vec (repeat (count @last-pop) (list))))))
 
 (defn- find-species
@@ -44,14 +53,21 @@
 
 
 (defn remove-worst-individuals-in-species
-[]
-(dosync 
- (ref-set cur-pop
-          (mapv (fn [species]
-                  (take (Math/ceil (* (count species)
-                                      @ep/survival-rate-in-species))
-                        (sort-by :fitness > species)))
-                @cur-pop))))
+  []
+  (dosync 
+   (ref-set cur-pop
+            (mapv (fn [species]
+                    (take (Math/ceil (* (count species)
+                                        @ep/survival-rate-in-species))
+                          (sort-by :fitness > species)))
+                  @cur-pop))))
+
+(defn- rand-species
+  []
+  (loop [spec (rand-nth @cur-pop)]
+    (if (< 0 (count spec))
+      spec
+      (recur (rand-nth @cur-pop)))))
 
 (defn- do-crossover 
   "With crossover-prob crossovers two individuals from same species with 1-interspecies-mating-prob
@@ -61,7 +77,7 @@
   (if (< (rand) @ep/crossover-prob)
     (let [ind1 (rand-nth species)
           ind2 (rand-nth (if (< (rand) @ep/interspecies-mating-prob)
-                           (rand-nth @cur-pop)
+                           (rand-species)
                            species))]
       (let [gene (op/crossover (:genome ind1) (:genome ind2) (- (:fitness ind1)
                                                                 (:fitness ind2)))]
@@ -74,5 +90,5 @@
                        (loop [i 0 
                               res []]
                          (if (< i pop-size)
-                           (recur (inc i) (conj res (do-crossover (rand-nth @cur-pop))))
+                           (recur (inc i) (conj res (do-crossover (rand-species))))
                            res)))))

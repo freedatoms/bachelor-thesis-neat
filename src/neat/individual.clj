@@ -10,7 +10,9 @@
 (defrecord Individual
     [genome
      raw-fitness
-     fitness]
+     fitness
+     expected-offspring
+     successful]
   GraphvizEnabled
   (save-image [this filename]
     (save-image (:genome this) filename))
@@ -29,6 +31,6 @@
   [& {:keys [genome inputs outputs]}]
   {:pre [(or (and inputs outputs) genome)]}
   (let [gen (or genome (genome/initial-genome inputs outputs))
-        raw-fit (@fitness-fun gen)
+        [raw-fit success?] (@fitness-fun gen)
         fit     0.0]
-    (->Individual gen raw-fit fit)))
+    (->Individual gen raw-fit fit success?)))
