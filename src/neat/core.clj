@@ -41,25 +41,12 @@
                   (== 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles genome [0 1] 100))))
                   (== 0 (Math/round (first (net/evaluate-neural-net-with-activation-cycles genome [1 1] 100)))))])))
 
-(def d (mapv (fn [_]
-               (reset! fitness-eval 0)
-               (e/evolve 2 1 150
-                       (fn [gen pop]
-                         (or
-                          (< 0 (count (filter :successful pop)))
-                          (> gen 1000)
-                          )))
-               @fitness-eval) (range 50)))
 
 (defn std [coll]
   (let [mu (float (/ (reduce + coll) (count coll)))]
     (Math/sqrt (float (/ (reduce + (mapv #(Math/pow (- %1 mu) 2) coll))
                          (count coll))))))
 
-(prn :avg (float (/ (reduce + d) (count d))))
-(prn :std (std d))
-(prn :min (apply min d))
-(prn :max (apply max d))
 
 
 
@@ -68,4 +55,21 @@
   [& args]
   ;; work around dangerous default behaviour in Clojure
   (alter-var-root #'*read-eval* (constantly false))
-  (println "Hello, World!"))
+  (println "Hello, World!")
+  (let [d (mapv (fn [_]
+                  (reset! fitness-eval 0)
+                  (e/evolve 2 1 150
+                            (fn [gen pop]
+                              (or
+                               (< 0 (count (filter :successful pop)))
+                               (> gen 1000)
+                               ))) 
+                  @fitness-eval) (range 500))]
+
+
+    (prn :avg (float (/ (reduce + d) (count d))))
+    (prn :std (std d))
+    (prn :min (apply min d))
+    (prn :max (apply max d))))
+
+;; (-main)

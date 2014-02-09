@@ -22,31 +22,22 @@
   (swap! population
          (fn [pop]
            (vec (sort-by :fitness >
-                         (mapv #(assoc % :fitness
-                                       (species/fitness-share 
-                                        (:genome %)
-                                        (:raw-fitness %))) pop))))))
+                         (mapv (fn [i]
+                                 (assoc i
+                                   :fitness (species/fitness-share (:genome i) 
+                                                                   (:raw-fitness i)))) pop))))))
 
 (defn- mutate 
   [population]
   (swap! population 
          #(mapv (fn [i]
-                  (if (< (rand) @ep/mutation-prob) 
-                    (let [gen (op/mutation (:genome i))]
-                      (ind/new-individual :genome gen))
-                    i)) %)))
+                  (ind/new-individual :genome (if (< (rand) @ep/mutation-prob) 
+                                                (op/mutation (:genome i))
+                                                (:genome i)))) %)))
 
 (defn- avg 
   [coll]
   (/ (reduce + coll) (count coll)))
-
-(defn- set-expected-offspring
-  [population]
-  (let [average-fitness (avg (mapv :raw-fitness @population))]
-    (swap! population #(mapv (fn [ind]
-                               (assoc ind :expected-offspring (/ (:raw-fitness ind)
-                                                                 average-fitness))) %))))
-
 
 (defn- end-of-generation
   [generation highest-fitness highest-fitness-since pop frame]
@@ -80,22 +71,22 @@
     (loop [generation 0
            highest-fitness 0.0
            highest-fitness-since 0]
-      (when (not (end-criterium generation @population))
-        (species/remove-worst-individuals-in-species)
-        (species/crossover-species population)
-        (mutate population)
-        (set-expected-offspring population)
-        (species/swap-pop)
-        (calculate-fitness population)
-        (end-of-generation generation highest-fitness highest-fitness-since population frame)        
-        (if (< highest-fitness (:raw-fitness (first @population)))
-          (recur (inc generation) (:raw-fitness (first @population)) generation)
-          (recur (inc generation) highest-fitness highest-fitness-since))))
-    #_(let [succ (sort-by :raw-fitness > (filter :successful @population))]
-      (if (< 0 (count succ))
-        (view (first succ) (viz/create-frame
-                            (format "NEAT fitness: %f, raw-fitness: %f"
-                                    (:fitness (first succ))
-                                    (:raw-fitness (first succ)))))))))
+      (if (not (end-criterium generation @population))
+        (do (species/remove-worst-individuals-in-species)
+            (species/crossover-species population)
+            (mutate population)
+            (species/swap-pop)
+            (calculate-fitness population)
+            (end-of-generation generation highest-fitness highest-fitness-since population frame)        
+            (if (< highest-fitness (:raw-fitness (first @population)))
+              (recur (inc generation) (:raw-fitness (first @population)) generation)
+              (recur (inc generation) highest-fitness highest-fitness-since)))
+        (do #_(let [succ (sort-by :raw-fitness > (filter :successful @population))]
+              (if (< 0 (count succ))
+                (view (first succ) (viz/create-frame
+                                    (format "NEAT fitness: %f, raw-fitness: %f"
+                                            (:fitness (first succ))
+                                            (:raw-fitness (first succ)))))))
+            generation)))))
 
 

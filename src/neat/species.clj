@@ -81,7 +81,7 @@
                            species))]
       (let [gene (op/crossover (:genome ind1) (:genome ind2) (- (:fitness ind1)
                                                                 (:fitness ind2)))]
-        (ind/new-individual :genome gene)))
+        (ind/new-individual :genome gene :fitness [-1.0 false])))
     (rand-nth species)))
 
 (defn crossover-species

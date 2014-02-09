@@ -11,7 +11,6 @@
     [genome
      raw-fitness
      fitness
-     expected-offspring
      successful]
   GraphvizEnabled
   (save-image [this filename]
@@ -28,9 +27,9 @@
     (view (:genome this) frame title)))
 
 (defn new-individual
-  [& {:keys [genome inputs outputs]}]
+  [& {:keys [genome inputs outputs fitness]}]
   {:pre [(or (and inputs outputs) genome)]}
   (let [gen (or genome (genome/initial-genome inputs outputs))
-        [raw-fit success?] (@fitness-fun gen)
+        [raw-fit success?] (or fitness  (@fitness-fun gen))
         fit     0.0]
     (->Individual gen raw-fit fit success?)))

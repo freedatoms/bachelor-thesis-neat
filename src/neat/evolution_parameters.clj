@@ -65,7 +65,7 @@
   :type :probability)
 (defoption fitness-fun
   "Fitness function"
-  (fn [_] (throw (Exception. "Fitness function is not set")))
+  (fn [&_] (throw (Exception. "Fitness function is not set")))
   :type :function)
 
 ;; Mutation
