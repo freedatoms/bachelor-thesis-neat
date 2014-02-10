@@ -1,26 +1,30 @@
 (ns neat.evolution-parameters)
 
 (defrecord Option
-    [name
+    [id
+     name
      var
      description 
      type
-     range])
+     value])
 
 (def options (atom []))
 
 (defmacro defoption
   "Creates an option"
   [name description default-value 
-   &{:keys [type range title]
+   &{:keys [type value title]
      :or {type :float}}]
   (let [titl (or title (str name))
-        rang (or range (case type
+        val  (or value (case type
                          :probability [0.0 1.0]
-                         nil))]
+                         nil))
+        typ (case type
+              :probability :float
+              type)]
     `(do
        (def ~name ~description (ref ~default-value))
-       (swap! options conj (Option. ~titl ~name ~description ~type ~rang)))))
+       (swap! options conj (Option. ~(keyword (str name)) ~titl ~name ~description ~typ ~val)))))
 
 ;; Evolution parameters
 (defoption c1
@@ -114,7 +118,7 @@
   "Set to [] if you are only interested in shape of the neural net"
   [:conn-gene :node-gene]
   :type :any-of
-  :range [:conn-gene :node-gene])
+  :value [:conn-gene :node-gene])
 
 ;;; internal
 (def innovation-number
