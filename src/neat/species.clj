@@ -8,6 +8,7 @@
 (defrecord Species 
     [max-fitness
      last-fitness-increase
+     avg-fitness
      representative
      expected-offspring
      individuals])
@@ -68,9 +69,9 @@
   (let [idx (find-species (:genome individual))] 
     (if (== idx (count @cur-pop))
       (dosync
-       (alter cur-pop conj (->Species (:raw-fitness individual) generation 
+       (alter cur-pop conj (->Species (:raw-fitness individual) generation nil
                                       (:genome individual)
-                                       0.0 [individual])))
+                                      0.0 [individual])))
       (dosync 
        (alter cur-pop #(update-in % [idx] place-individual-in-species individual generation))))))
 
@@ -90,6 +91,7 @@
 (defn- reproduce-species
   [species generation]
   (when (< 0 (count (:individuals species)))
+    (place-in-new-generation (first (:individuals species)) generation)
     (dotimes [eo (:expected-offspring species)]
       #_(when nil ;superchamp
           (if (or (< (rand) 0.8)
@@ -98,9 +100,11 @@
             (add-connection)))
       
       (place-in-new-generation (cond 
-                                (> (:expected-offspring 
-                                    (first (:individuals species)))  5) 
-                                (first (:individuals species))
+                                ;; (> (:expected-offspring 
+                                ;;     (first (:individuals species)))  5) 
+                                ;; (do
+                                ;;   (prn (prn (count (:individuals species))))
+                                ;;   (first (:individuals species)))
 
                                 (< (rand) @ep/mutate-only-prob)
                                 (mutation (rand-nth (:individuals species)))
@@ -127,36 +131,40 @@
 
 (defn- calculate-properties
   [population-size]
-  (let [avg-fitness (/ (reduce + (map #(reduce + (map :raw-fitness (:individuals %))) @cur-pop))
-                       population-size)]
-    (dosync
-     (alter cur-pop (fn [pop]
-                      (mapv (fn [species]
-                              (let [ninds (mapv #(assoc % 
-                                                   :fitness (float (/ (:raw-fitness %)
-                                                                      (count species)))
-                                                   :expected-offspring (float (/ (/ 
-                                                                                  (:raw-fitness %)
-                                                                                  (count species))
-                                                                                 avg-fitness)))
-                                                (:individuals species))
-                                    repr (if (< 0 (count ninds))
-                                           (:genome (rand-nth ninds))
-                                           (:representative species))]
+  (dosync
+   (alter cur-pop (fn [pop]
+                    (mapv (fn [species]
+                            (let [ninds (mapv #(assoc % 
+                                                 :fitness (float (/ (:raw-fitness %)
+                                                                    (count species))))
+                                              (:individuals species))
+                                  repr (if (< 0 (count ninds))
+                                         (:genome (rand-nth ninds))
+                                         (:representative species))]
 
-                                (assoc species 
-                                  :representative repr
-                                  :individuals ninds
-                                  :expected-offspring (reduce + (mapv :expected-offspring ninds)))))
-                            pop))))))
+                              (assoc species 
+                                :representative repr
+                                :individuals ninds
+                                :avg-fitness (float (/ (reduce + (mapv :fitness ninds))
+                                                       (count ninds))))))
+                          pop)))))
+
+(defn- calculate-expected-offspring
+  [pop-size]
+  (dosync 
+   (alter cur-pop (fn [pop]
+                    (let [ft (reduce + (mapv :avg-fitness pop))]
+                      (mapv #(assoc % :expected-offspring (* pop-size (/ (:avg-fitness %) 
+                                                                         ft))) pop))))))
 
 (defn reproduce
   [generation population-size]
   (remove-worst-individuals-in-species)
   (dosync
-   (ref-set sorted-pop (mapv #(update-in % [:expected-offspring] 
-                                         (fn [x] (Math/floor x)))
-                             (sort-by :max-fitness > @cur-pop)))
+   (ref-set sorted-pop (mapv #(assoc % 
+                                :expected-offspring (Math/floor (:expected-offspring %))
+                                :individuals (vec (sort-by :raw-fitness > (:individuals %))))
+                             (sort-by :avg-fitness > @cur-pop)))
    (let [pop-eo (- population-size
                    (reduce + (map :expected-offspring @sorted-pop)))]
      
@@ -166,13 +174,17 @@
   
   (dorun (doseq [sp @sorted-pop]
            (reproduce-species sp generation)))
-  (calculate-properties population-size))
+  (calculate-properties population-size)
+  (calculate-expected-offspring population-size)
+  (prn (mapv :expected-offspring @cur-pop)))
 
 
 (defn initialize
   [pop-size inputs outputs]
   (dorun (doseq [i (repeatedly pop-size #(ind/new-individual :inputs inputs
                                                              :outputs outputs))]
-           (place-in-new-generation i 0))))
+           (place-in-new-generation i 0)
+           (calculate-properties pop-size)
+           (calculate-expected-offspring pop-size))))
 
 

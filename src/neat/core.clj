@@ -13,14 +13,14 @@
  (ref-set ep/c1 1.0)
  (ref-set ep/c2 1.0)
  (ref-set ep/c3 0.4)
- (ref-set ep/dt 3.0)
+ (ref-set ep/dt 1.0)
  (ref-set ep/add-node-prob 0.03)
  (ref-set ep/add-connection-prob 0.05)
  (ref-set ep/mutate-weights-prob 0.8)
  (ref-set ep/mutate-weights-perturb-prob 0.9)
- (ref-set ep/mutate-only-prob 0.025)
+ (ref-set ep/mutate-only-prob 0.25)
  (ref-set ep/disable-in-crossover 0.75)
- (ref-set ep/mate-only-prob 0.02)
+ (ref-set ep/mate-only-prob 0.2)
  (ref-set ep/weight-range [-1.0 1.0])
  (ref-set ep/mutate-weights-perturb-sigma 1.0)
  (ref-set ep/interspecies-mating-prob 0.001)
@@ -29,7 +29,6 @@
  (ref-set ep/visualize-genome-with [])
  (ref-set ep/fitness-fun 
           (fn [genome]
-            (swap! fitness-eval inc)
             [(Math/pow (- 4 
                           (reduce + 
                                   (mapv #(Math/abs (- %2 
@@ -56,13 +55,11 @@
 
 (def fitness-eval (atom 0))
 (def d (mapv (fn [_]
-               (reset! fitness-eval 0)
                (e/evolve 2 1 150
                          (fn [gen pop]
                            (or
                             (< 0 (count (filter :successful pop)))
-                            (> gen 1000))))
-               @fitness-eval) (range 5)))
+                            (> gen 1000))))) (range 5)))
 
 (defn std [coll]
   (let [mu (float (/ (reduce + coll) (count coll)))]

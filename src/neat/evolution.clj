@@ -41,14 +41,15 @@
         population (atom [])]
     (species/initialize pop-size inputs outputs)
     (loop [generation 0]
-      (when (not (end-criterium generation @population))
-        (species/reproduce generation pop-size)
-        (reset! population (vec (sort-by :raw-fitness (mapcat :individuals @species/cur-pop))))
-        (end-of-generation generation 
-                           population
-                           frame)        
-        
-        (recur (inc generation))))
+      (if (not (end-criterium generation @population))
+        (do (species/reproduce generation pop-size)
+            (reset! population (vec (sort-by :raw-fitness > (mapcat :individuals @species/cur-pop))))
+            (end-of-generation generation 
+                               population
+                               frame)        
+            
+            (recur (inc generation)))
+        generation))
     #_(let [succ (sort-by :raw-fitness > (filter :successful @population))]
       (if (< 0 (count succ))
         (view (first succ) (viz/create-frame
