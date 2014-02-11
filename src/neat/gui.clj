@@ -9,9 +9,13 @@
   [id type value default-value]
   (case type
     :float (sc/spinner :id id :model (sc/spinner-model (double default-value)
-                                                :from (and value (double (first value)))
-                                                :to (and value (double (second value)))
-                                                :by 0.001))
+                                                       :from (and (seq value) (double (first value)))
+                                                       :to (and (second value) (double (second value)))
+                                                       :by 0.001))
+    :int   (sc/spinner :id id :model (sc/spinner-model (int default-value)
+                                                       :from (and (seq value) (int (first value)))
+                                                       :to (and (second value) (int (second value)))
+                                                       :by 1))
     :range (sc/text :id id :text (str (first default-value)
                                       ";"
                                       (second default-value)))
@@ -19,15 +23,18 @@
                                 :selection-mode :multi-interval)]
               (sc/selection! x {:multi? true} default-value)
               x)
+    :boolean (sc/checkbox :id id :selected? default-value)
     (sc/label :id id :text "Cannot be set yet!")))
 
 
 (defn- create-option-widget
   [option]
-  [(:name option) (create-widget-for (:id option)
-                                     (:type option) 
-                                     (:value option)
-                                     @(:var option))])
+  [(sc/label :text (:name option)
+             :tip  (:description option))
+   (create-widget-for (:id option)
+                      (:type option) 
+                      (:value option)
+                      @(:var option))])
 
 (defn- create-id-selector
   [s]
@@ -35,8 +42,8 @@
 
 (defn- vec* 
   [coll]
-  (if (vector? coll)
-    coll
+  (if (seq coll)
+    (vec coll)
     [coll]))
 
 (defn- get-new-settings
@@ -45,7 +52,7 @@
                    [id (let [w  (sc/select panel [(create-id-selector id)])]
                          (case type 
                            :range (mapv (comp double read-string) (clojure.string/split (sc/value w) #"\s*;\s*"))
-                           :any-of (vec* (sc/selection w))
+                           :any-of (vec* (sc/selection w {:multi? true}))
                            (sc/value w)))])
                  (mapv (juxt :id :type) @ep/options))))
 
@@ -53,7 +60,7 @@
   [new-settings]
   (dosync
    (dorun (doseq [opt @ep/options]
-            (if (#{:float :range :any-of} (:type opt))
+            (if (#{:float :int :range :any-of :boolean} (:type opt))
               (ref-set (:var opt) (new-settings (:id opt))))))))
 
 (defn- create-options
@@ -70,14 +77,8 @@
 
 (defn show-options
   []
-  (-> (sc/frame :content (create-options) :title "Settings")
+  (-> (sc/frame :content (sc/scrollable (create-options)) :title "Settings")
       sc/pack!
       sc/show!))
-
-
-
-
-
-
 
 

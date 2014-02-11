@@ -81,7 +81,7 @@
             (if (< highest-fitness (:raw-fitness (first @population)))
               (recur (inc generation) (:raw-fitness (first @population)) generation)
               (recur (inc generation) highest-fitness highest-fitness-since)))
-        (do #_(let [succ (sort-by :raw-fitness > (filter :successful @population))]
+        (do (let [succ (sort-by :raw-fitness > (filter :successful @population))]
               (if (< 0 (count succ))
                 (view (first succ) (viz/create-frame
                                     (format "NEAT fitness: %f, raw-fitness: %f"

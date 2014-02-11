@@ -26,7 +26,20 @@
        (def ~name ~description (ref ~default-value))
        (swap! options conj (Option. ~(keyword (str name)) ~titl ~name ~description ~typ ~val)))))
 
+
 ;; Evolution parameters
+(defoption population-size
+  "Size of population"
+  150
+  :type :int
+  :value [1])
+
+(defoption generation-count
+  "Maximum number of generations."
+  100
+  :type :int
+  :value [1])
+
 (defoption c1
   "Excess gene importance in delta function"
    1.0
@@ -50,22 +63,23 @@
   :title "Transfer function")
 (defoption survival-rate-in-species 
   "Specifies how many individui should survive the elimination 
-   of the lowest performing members in every species. 
-
-   Number of surviving members of species is ceil(#ind * survival rate), 
-   this way at least one individual survives."
-   0.85
+   of the lowest performing members in every species."
+   0.2
   :type :probability)
 (defoption weight-range
-  "Lower and upper bound"
-  [-1.0 1.0]
+  "Lower and upper bound used for generating new genomes and clamping"
+  [-2.5 2.5]
   :type :range)
+(defoption clamp-weight-factor
+  "Multiplier for weight range for clamping the weight. Setting it to 0 disables the clamping"
+  0.0
+  :type :float)
 
 ;; Creation
 (defoption connection-density
   "How many connections are created in initial population.
    If set to 0 only max(in+1,out) connections will be created"
-   0.1
+   0.0
   :type :probability)
 (defoption fitness-fun
   "Fitness function"
@@ -73,9 +87,13 @@
   :type :function)
 
 ;; Mutation
+(defoption mutate-only-prob
+  "Probability of mutation without crossover"
+  0.25
+  :type :probability)
 (defoption mutation-prob
   "Probability of mutation"
-  0.5
+  0.25
   :type :probability)
 (defoption mutate-weights-prob
   "Probability of mutating weights"
@@ -87,8 +105,8 @@
   :type :probability)
 (defoption mutate-weights-perturb-sigma
   "Sigma of mutate weights perturbation"
-  1.0
-  :type :probability)
+  2.5
+  :type :float)
 (defoption add-connection-prob
   "Probability of add-connection mutation"
   0.05
@@ -120,7 +138,71 @@
   :type :any-of
   :value [:conn-gene :node-gene])
 
-;;; internal
+
+;; Druha verze
+(defoption dt-delta
+  "Used when targeting concrete number of species"
+  0.4
+  :type :float)
+
+(defoption target-species
+  "Target number of species. 0 for not adjusting dt."
+  0
+  :type :int)
+
+(defoption young-age
+  "When is species young"
+  10
+  :type :int)
+
+(defoption young-age-multiplier
+  "Multiply fitness by this of young species to aid it"
+  1.2
+  :type :float)
+        
+(defoption old-age
+  "When is species old"
+  30
+  :type :int)
+
+(defoption old-age-multiplier 
+  "Multiply fitness by this to penalize old species"
+  0.2
+  :type :float)
+        
+(defoption stagnation-age
+  "How long keep the stagnating species"
+  15
+  :type :int)
+
+(defoption tournament-k
+  "Used for pool size in tournament selection"
+  1
+  :type :int)
+
+(defoption elitism
+  "Copy best individual in each species?" 
+  true
+  :type :boolean)
+
+(defoption min-elitism-size
+  "How many individuals do the species need to copy the best individual to new generation"
+  5
+  :type :int)
+
+;; Mating
+(defoption mate-only-prob
+  "Probability of crossover without mutation"
+  0.2
+  :type :probability)
+
+(defoption mate-by-choosing-prob
+  "Mate by choosing genes otherwise average the matching genes"
+  0.6
+  :type :probability)
+
+   
+;;; internal ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def innovation-number
   "Used for historical markings"
   (atom 0))
@@ -128,6 +210,14 @@
 (def gene-pool
   "used during add-node and add-connection mutations to enhance gene-matching"
   (atom {}))
+
+(def input-count
+  "Number of inputs"
+  (ref 2))
+
+(def output-count
+  "Number of outputs"
+  (ref 1))
 
 
 ;; Functions

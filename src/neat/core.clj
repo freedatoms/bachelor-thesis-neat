@@ -25,7 +25,7 @@
  (ref-set ep/mutate-weights-perturb-sigma 2.0)
  (ref-set ep/interspecies-mating-prob 0.001)
  (ref-set ep/survival-rate-in-species 0.99)
- (ref-set ep/connection-density -1.0)
+ (ref-set ep/connection-density 0.0)
  (ref-set ep/visualize-genome-with [])
  (ref-set ep/fitness-fun 
           (fn [genome]
@@ -64,7 +64,7 @@
                                (< 0 (count (filter :successful pop)))
                                (> gen 1000)
                                ))) 
-                  @fitness-eval) (range 500))]
+                  @fitness-eval) (range 100))]
 
 
     (prn :avg (float (/ (reduce + d) (count d))))

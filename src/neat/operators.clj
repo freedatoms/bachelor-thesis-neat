@@ -67,11 +67,13 @@
 
 (defn- clamp-weight
   [weight]
-  (let [[lo hi] @weight-range]
-    (cond
-     (< weight lo) lo
-     (> weight hi) hi
-     :else weight)))
+  (if (== @clamp-weight-factor 0.0)
+    weight
+    (let [[lo hi] (mapv (partial * @clamp-weight-factor) @weight-range)]
+      (cond
+       (< weight lo) lo
+       (> weight hi) hi
+       :else weight))))
 
 (defn- mutate-weights
   "With probability of @mutate-weights-perturb-prob uniformly perturbs weight
@@ -104,32 +106,43 @@
         (mutate-weights g)
         g))))
 
+(defn- merge-genes
+  [[x y :as arg]]
+  (let [gene (if (< (rand) @mate-by-choosing-prob)
+               (rand-nth arg)
+               (assoc x :weight (/ (+ (:weight x)
+                                      (:weight y)) 2)))]
+    (if (not (and (:enabled? x)
+                  (:enabled? y))) 
+      (assoc gene :enabled?  (< (rand) @disable-in-crossover))
+      gene)))
+
 (defn crossover
   "Takes two genomes and difference of fitnesses"
   [^neat.genome.Genome g1 ^neat.genome.Genome g2 f1-f2]
-  (let [node-genes (if (< (count (:node-genes g1))
-                          (count (:node-genes g2)))
-                     (:node-genes g2)
-                     (:node-genes g1))
+  (let [node-genes (cond
+                    (> f1-f2 0) (:node-genes g1)
+                    (< f1-f2 0) (:node-genes g2)
+                    :else (if (> (count (:node-genes g1))
+                                 (count (:node-genes g2)))
+                            (:node-genes g1)
+                            (:node-genes g2)))
         mg (genome/match-genes g1 g2)]
     (genome/->Genome node-genes  (vec (filter identity
                                               (cond
                                                (> f1-f2 0) (mapv (fn [[x y :as arg]]
                                                                    (cond
-                                                                    (and x y) (rand-nth arg)
+                                                                    (and x y) (merge-genes arg)
                                                                     x x
                                                                     :else nil)) mg)
                                                (< f1-f2 0) (mapv (fn [[x y :as arg]]
                                                                    (cond
-                                                                    (and x y) (rand-nth arg)
+                                                                    (and x y) (merge-genes arg)
                                                                     y y
                                                                     :else nil)) mg)
                                                :else (mapv (fn [[x y :as arg]]
                                                              (if (and x y)
-                                                               (if (not (and (:enabled? x)
-                                                                             (:enabled? y))) 
-                                                                 (assoc (rand-nth arg) :enabled?  (< (rand) @disable-in-crossover))
-                                                                 (rand-nth arg))
+                                                               (merge-genes arg)
                                                                (or x y))) mg)))))))
 
 
