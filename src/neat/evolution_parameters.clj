@@ -153,7 +153,8 @@
 (defoption young-age
   "When is species young"
   10
-  :type :int)
+  :type :int
+  :value [1])
 
 (defoption young-age-multiplier
   "Multiply fitness by this of young species to aid it"
@@ -163,7 +164,8 @@
 (defoption old-age
   "When is species old"
   30
-  :type :int)
+  :type :int
+  :value [1])
 
 (defoption old-age-multiplier 
   "Multiply fitness by this to penalize old species"
@@ -173,12 +175,14 @@
 (defoption stagnation-age
   "How long keep the stagnating species"
   15
-  :type :int)
+  :type :int
+  :value [1])
 
 (defoption tournament-k
   "Used for pool size in tournament selection"
   1
-  :type :int)
+  :type :int
+  :value [1])
 
 (defoption elitism
   "Copy best individual in each species?" 
@@ -188,7 +192,8 @@
 (defoption min-elitism-size
   "How many individuals do the species need to copy the best individual to new generation"
   5
-  :type :int)
+  :type :int
+  :value [1])
 
 ;; Mating
 (defoption mate-only-prob
@@ -206,7 +211,12 @@
 (def innovation-number
   "Used for historical markings"
   (atom 0))
-
+(def species-count 
+  "Used for numbering species"
+  (atom 0))
+(def individuals-count 
+  "Used for numbering species"
+  (atom 0))
 (def gene-pool
   "used during add-node and add-connection mutations to enhance gene-matching"
   (atom {}))
