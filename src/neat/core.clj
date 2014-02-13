@@ -9,7 +9,7 @@
 
 (def fitness-eval (atom 0))
 
-(dosync 
+#_(dosync 
  (ref-set ep/c1 1.0)
  (ref-set ep/c2 1.0)
  (ref-set ep/c3 0.3)

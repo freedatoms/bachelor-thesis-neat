@@ -6,6 +6,8 @@
              [genome :as gen]
              [operators :as op]]))
 
+(set! *warn-on-reflection* true)
+
 (defrecord Population
     [champions
      generation
@@ -103,7 +105,7 @@
     (if (< (rand) @ep/mutate-only-prob)
       (let [p1 (tournament pool)]
         (ind/new-individual :genome (op/mutation (:genome p1))
-                            :id p1))
+                            :id (:id  p1)))
       (ind/new-individual :genome  (let [p1 (tournament pool)
                                          p2 (tournament pool)
                                          ch (op/crossover (:genome p1)
@@ -117,8 +119,8 @@
 (defn- produce-offspring 
   [species]
   (let [sorted-inds (sort-by :fitness > (:members species))
-        keep (max 1 (int (Math/round (* (count (:members species))
-                                        @ep/survival-rate-in-species))))
+        keep (max 1 (int (Math/round ^double (* (count (:members species))
+                                                @ep/survival-rate-in-species))))
         pool (vec (take keep sorted-inds))]
     (loop [members (if (and @ep/elitism (> (count sorted-inds)
                                            @ep/min-elitism-size))
@@ -188,7 +190,7 @@
   (let [total-avg (reduce + (map :avg-fitness (:species @pop)))]
     (swap! pop update-in [:species]
            #(mapv (fn [species]
-                    (assoc species :offspring (int (Math/round (* @ep/population-size
+                    (assoc species :offspring (int (Math/round ^double (* @ep/population-size
                                                                   (/ (:avg-fitness species)
                                                                      total-avg)))))) %)))
   (if (== 0 (count (:species @pop)))

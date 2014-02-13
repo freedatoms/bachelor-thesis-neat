@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [rhizome "0.2.0"]
                  [aysylu/loom "0.4.2"]
+                 [incanter "1.5.4"]
                  [seesaw "1.4.4"]]
   :aot [loom.graph]
   :java-source-paths ["java/src"] 
-  :main neat.core)
+  :main neat.evolution2)

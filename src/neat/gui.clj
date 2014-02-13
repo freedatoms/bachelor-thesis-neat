@@ -44,7 +44,9 @@
   [coll]
   (if (seq coll)
     (vec coll)
-    [coll]))
+    (if coll 
+      [coll]
+      nil)))
 
 (defn- get-new-settings
   [panel]

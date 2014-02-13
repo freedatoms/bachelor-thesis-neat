@@ -2,7 +2,9 @@
   (:require [neat
              [population2 :as pop]
              [evolution-parameters :as ep]
-             [gui :as gui]])
+             [gui :as gui]]
+            [clojure
+             [inspector :as ins]])
   (:use [neat
          graphviz-enabled]))
 
@@ -35,16 +37,16 @@
 
 (defn- median
   [coll]
-  (nth (sort coll) (Math/round (float (/ (count coll) 2)))))
+  (nth (sort coll) (Math/floor (float (/ (count coll) 2)))))
 
 (defn- print-stats 
   [coll]
   (let [evals (mapv (partial * @ep/population-size) coll)]
-    (prn :mean (mean evals))
-    (prn :std (std evals))
-    (prn :min (apply min evals))
-    (prn :max (apply max evals))
-    (prn :median (median evals))))
+    (prn :mean (mean evals)
+         :std (std evals)
+         :min (apply min evals)
+         :max (apply max evals)
+         :median (median evals))))
 
 
 (defn evolution
@@ -54,7 +56,7 @@
   (let [population (atom (pop/new-population))]
     (while (not (:solved-at @population))
       (let [stats (last (:stats (pop/evolve population)))]
-        (printf "Generation: %d Species count: %d solved: %d Best fitness: %s Avg fitness: %f dt: %f innov: %d\n"
+        #_(printf "Generation: %d Species count: %d solved: %d Best fitness: %s Avg fitness: %f dt: %f innov: %d\n"
                 (:generation stats)
                 (count (:species stats))
                 (count (:solutions stats))
@@ -62,12 +64,37 @@
                 (mean (mapv  :avg-fitness (:species stats)))
                 (:current-dt stats)
                 @ep/innovation-number)))
-
+    #_(ins/inspect-tree (first (:solutions (last (:stats @population)))))
     #_(view (first (:solutions (last (:stats @population)))))
     (:generation @population)))
+(require '[neat [individual2 :as ind]])
 
-;(gui/show-options)
 
-(do
-  (def d (mapv (fn [_] (evolution)) (range 10)))
-  (print-stats d))
+(defn -main 
+  [& args]
+  (gui/show-options)
+  (dosync
+   (ref-set ep/weight-range [-20.0 20.0]))
+  (dorun (doseq [n [10 50 100]
+                 r [[-8.0 8.0]
+                    [-10.0 10.0]
+                    [-12.0 12.0]
+                    [-14.0 14.0]
+                    [-16.0 16.0]
+                    [-18.0 18.0]
+                    [-20.0 20.0]
+                    [-22.0 22.0]
+                    [-24.0 24.0]
+                    [-26.0 26.0]
+                    [-28.0 28.0]
+                    [-30.0 30.0]
+                    [-32.0 32.0]
+                    [-34.0 34.0]
+                    [-36.0 36.0]
+                    [-38.0 38.0]
+                    [-40.0 40.0]]]
+           (dosync
+            (ref-set ep/weight-range r))
+           (print n :=> r)
+           (def d (mapv (fn [_] (evolution)) (range n)))
+           (print-stats d))))

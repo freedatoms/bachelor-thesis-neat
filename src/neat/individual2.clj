@@ -29,5 +29,8 @@
 
 (defn new-individual
   [&{:keys [genome input output id]}]
+  (if (not (or genome (and input output)))
+    (throw (Error. "Either genome or input and output must be supplied")))
   (->Individual (or id (swap! ep/individuals-count inc))
                 (or genome (genome/initial-genome input output)) 0.0 0.0 false))
+

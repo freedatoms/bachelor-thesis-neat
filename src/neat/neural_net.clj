@@ -47,11 +47,11 @@
            diff (double 0.0)]
       (if (< idx len)
         (let [^double nd (fun (aget from idx))
-              d  (Math/abs ^double (- ^double (aget to idx) ^double nd))]
+              d ^double (Math/abs ^double (- ^double (aget to idx) ^double nd))]
           (aset to idx nd)
           (aset from idx 0.0)
           (recur (inc idx)
-                 (+ d diff)))
+                 ^double (+ d diff)))
         diff))))
 
 (defn evaluate-neural-net-with-activation-cycles
@@ -62,8 +62,8 @@
         links   (vec (filter :enabled? (:connection-genes genome)))
         preact  (double-array (count (:node-genes genome)) 0.0)
         postact (double-array (count (:node-genes genome)) (into [1.0] inputs))]
-    (loop [act-cyc activation-cycles
-           err (double 1.0)]
+    (loop [^long act-cyc activation-cycles
+           err (double 99999999.0)]
       (if (or (= act-cyc 0) (< err threshold))
         (mapv #(aget postact %) outputs)
         (do
@@ -71,7 +71,7 @@
                    (aset preact (dec (:out l)) (+ (aget preact (dec (:out l)))
                                                   (* (:weight l)
                                                      (aget postact (dec (:in l))))))))
-          (recur (dec act-cyc)
+          (recur (dec ^long act-cyc)
                  (doubles-map-to-with-diff
                   @transfer-fun
                   preact
