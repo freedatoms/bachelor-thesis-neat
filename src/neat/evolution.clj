@@ -50,7 +50,7 @@
           highest-fitness-since
           )
    #_(view (first @pop) frame
-        (format "NEAT generation: %d, #species: %d, fitness: %f, raw-fitness: %f, successful: %s"
+           (format "NEAT generation: %d, #species: %d, fitness: %f, raw-fitness: %f, successful: %s"
                 generation
                 (count @species/last-pop)
                 (:fitness (first @pop))

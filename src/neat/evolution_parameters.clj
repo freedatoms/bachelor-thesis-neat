@@ -148,7 +148,8 @@
 (defoption target-species
   "Target number of species. 0 for not adjusting dt."
   0
-  :type :int)
+  :type :int
+  :value [0])
 
 (defoption young-age
   "When is species young"

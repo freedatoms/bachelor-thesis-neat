@@ -29,11 +29,12 @@
 (defn- evaluate 
   [individuals]
   (mapv (fn [ind]
-          (let [[rf solved?] (@ep/fitness-fun (:genome ind))]
+          (let [{:keys [fitness solved? success-rate]} (@ep/fitness-fun (:genome ind))]
             (assoc ind 
-              :raw-fitness rf
-              :fitness rf
-              :solved? solved?)))
+              :raw-fitness fitness
+              :fitness fitness
+              :solved? solved?
+              :success-rate success-rate)))
         individuals))
 
 (defn- get-evaluated-individuals
@@ -212,19 +213,22 @@
       (reproduce population)
       (if (== 0 (count (:species @population)))
         (prn "chyba1"))
-      (swap! population assoc 
-             :generation (inc (:generation @population))
-             :stats (conj (:stats @population)
-                          {:generation (:generation @population)
-                           :champion (last (:champions @population))
-                           :species (mapv (fn [spec]
-                                            {:id (:id spec)
-                                             :has-best (:has-best spec)
-                                             :max-fitness (:max-fitness spec)
-                                             :avg-fitness (:avg-fitness spec)
-                                             :size (count (:members spec))}) (:species @population))
-                           :solutions solutions
-                           :current-dt (:current-dt @population)}))))
+      (let [ms (first (sort-by :success-rate > (mapcat :members (:species @population))))]
+        (swap! population assoc 
+               :generation (inc (:generation @population))
+               :stats (conj (:stats @population)
+                            {:generation (:generation @population)
+                             :champion (last (:champions @population))
+                             :species (mapv (fn [spec]
+                                              {:id (:id spec)
+                                               :has-best (:has-best spec)
+                                               :max-fitness (:max-fitness spec)
+                                               :avg-fitness (:avg-fitness spec)
+                                               :size (count (:members spec))}) (:species @population))
+                             :solutions solutions
+                             :success-rate (:success-rate ms)
+                             :most-successful ms
+                             :current-dt (:current-dt @population)})))))
   @population)
 
 

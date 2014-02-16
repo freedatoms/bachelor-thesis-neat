@@ -58,12 +58,19 @@
                            (sc/value w)))])
                  (mapv (juxt :id :type) @ep/options))))
 
-(defn- set-new-settings
+(defn set-new-settings
   [new-settings]
   (dosync
    (dorun (doseq [opt @ep/options]
-            (if (#{:float :int :range :any-of :boolean} (:type opt))
+            (if (and (#{:float :int :range :any-of :boolean} (:type opt))
+                     (new-settings (:id opt)))
               (ref-set (:var opt) (new-settings (:id opt))))))))
+
+(defn print-settings
+  []
+  (prn (into {} (mapv (fn [opt]
+                        (if (#{:float :int :range :any-of :boolean} (:type opt))
+                          (vector (:id opt) @(:var opt))))  @ep/options))))
 
 (defn- create-options
   []
@@ -82,5 +89,6 @@
   (-> (sc/frame :content (sc/scrollable (create-options)) :title "Settings")
       sc/pack!
       sc/show!))
+
 
 

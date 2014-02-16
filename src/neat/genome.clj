@@ -41,6 +41,15 @@
         (.repaint frame)
         (.setVisible frame true)))))
 
+(defn- in-out
+  [genes]
+  (loop [last (first genes)
+         rst  (next genes)
+         res []]
+    (if rst
+      (recur (first rst) (next rst) (conj res [(:id last) [(:id (first rst))]]))
+      res)))
+
 (defn- genome->graph
   [^Genome gen]
   (loop [cg (:connection-genes gen)
@@ -68,44 +77,83 @@
                    "disabled")
                  (format "%.3f" (:weight %))) genes))
 
+(defn- weight-to-prop
+  [weight [min max]]
+  (let [neg-step (/ 2 (- min))
+        pos-step (/ 2 max)
+        neg-color-step (/ 100 (- min))
+        pos-color-step (/ 100 max)]
+    
+    (if (< weight 0)
+      {:penwidth (str (float (+ 1 (* (- weight) neg-step))))
+       :color (format "#ff%02x%02x"
+                      (int (- 101  (* (- weight) neg-color-step)))
+                      (int (- 101 (* (- weight) neg-color-step))))}
+      {:penwidth (str (float (+ 1 (* weight pos-step))))
+       :color (format "#%02x%02x%02x" 
+                      (int (- 101 (* weight pos-color-step)))
+                      (int (- 101 (* weight pos-color-step)))
+                      (int (- 101 (* weight pos-color-step))))})))
+
+
 (defn- -do-graphviz-fun
   [fun g]
-  (fun (into (mapv :id (:node-genes g)) @ep/visualize-genome-with) (genome->graph g)
-       :node->descriptor (fn [x]
-                           (case x
-                             :node-gene {:shape "record"
-                                         :label (node-genes->records (:node-genes g))}
-                             :conn-gene {:shape "record"
-                                         :label (conn-genes->records (:connection-genes g))}
-                             {:label (str x),
-                              :shape "circle",
-                              :style "filled",
-                              :fixedsize "true"
-                              :width "0.5"
-                              :height "0.5"
-                              :fillcolor (case (:type (nth (:node-genes g) (dec x)))
-                                           :input "#55ff55"
-                                           :bias "#aaffff"
-                                           :hidden "gray"
-                                           :output "#ff5555"
-                                           "white")}))
-       :edge->descriptor (fn [in _]
-                           (case in
-                             :node-gene {:style "invis"}
-                             {}))
-       :node->cluster (into {:node-gene :gene,
-                             :conn-gene :gene}
-                            (mapv #(vector (:id %) (case (:type %)
-                                                     :input :input
-                                                     :bias  :input
-                                                     :output :output
-                                                     nil)) (:node-genes g)))
-       :cluster->descriptor (fn [cluster]
-                              (case cluster
-                                :gene {:style "invis"}
-                                {:style "invis"}))
-       :options {:splines "polyline"
-                 :dpi "50"}))
+  (let [input-cnt (count (mapv :id (filter #(#{:bias :input} (:type %)) (:node-genes g))))
+        output-cnt (count (mapv :id (filter #(#{:output} (:type %)) (:node-genes g))))
+        weights (into {} (mapv #(vector [(:in %) (:out %)] (:weight %)) (:connection-genes g)))
+        wr (apply (juxt min max) (vals weights))]
+    (fun (into (mapv :id (:node-genes g)) @ep/visualize-genome-with) 
+         (genome->graph g)
+         :node->descriptor (fn [x]
+                             (case x
+                               :node-gene {:shape "record"
+                                           :label (node-genes->records (:node-genes g))}
+                               :conn-gene {:shape "record"
+                                           :label (conn-genes->records (:connection-genes g))}
+                               (into {:label (str x),
+                                      :style "filled",
+                                      :fixedsize "true"
+                                      :shape "circle"
+                                      :width "0.4"
+                                      :height "0.4"}
+                                     (case (:type (nth (:node-genes g) (dec x)))
+                                       :input [[:fillcolor "#55ff55"][:rank "source"] [:pos (format "%f,0!" (+ (dec x)
+                                                                                                               (if (< input-cnt output-cnt)
+                                                                                                                 (float (/ (Math/abs (- input-cnt output-cnt)) 2))
+                                                                                                                 0.0)))]
+                                               [:pin "true"]]
+                                       :bias [[:fillcolor  "#aaffff"][:rank "source"] [:pos (format "%f,0!" (+ (dec x)
+                                                                                                               (if (< input-cnt output-cnt)
+                                                                                                                 (float (/ (Math/abs (- input-cnt output-cnt)) 2))
+                                                                                                                 0.0)))]
+                                              [:pin "true"]]
+                                       :hidden [[:fillcolor "gray"]]
+                                       :output [[:fillcolor  "#ff5555"][:rank "sink"] [:pos (format "%f,10!" (+ (- x (inc input-cnt))
+                                                                                                                (if (> input-cnt output-cnt)
+                                                                                                                  (float (/ (Math/abs (- input-cnt output-cnt)) 2))
+                                                                                                                  0.0)))] 
+                                                [:pin "true"]]
+                                       [[:filcolor "white"]]))))
+         :edge->descriptor (fn [in out]
+                             (case in
+                               :node-gene {:style "invis"}
+                               (weight-to-prop (weights [in out]) wr)))
+         :node->cluster {:node-gene :gene,
+                                :conn-gene :gene}
+         
+         :cluster->descriptor (fn [cluster]
+                                (case cluster
+                                  :gene {:style "invis"}
+                                  {:style "invis"}))
+
+         :options {:splines "true"
+                   :dpi "50"
+                   :rankdir "BT"
+                   :layout "neato"
+                   :mode "hier"
+                   :sep "1"
+                   :overlap "false"
+                   })))
 
 
 (defn- flatten* [x]

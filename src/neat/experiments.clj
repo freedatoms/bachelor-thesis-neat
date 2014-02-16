@@ -2,31 +2,47 @@
   (:require [neat 
              [evolution2 :as evo]
              [evolution-parameters :as ep]
+             [gui :as gui]
              [neural-net :as net]]
             [incanter
              [core :as co]
              [io :as io]                
-             [datasets :as dat]]))
+             [datasets :as dat]]
+            ))
 
 
-
+(def dataset-prefix "/home/frydatom/Dokumenty/FIT/Bakalářka/Implementace/datasets/")
 
 (defn xor-problem
   []
   (dosync
+   (ref-set ep/weight-range [-26.0 26.0])
    (ref-set ep/fitness-fun 
             (fn [genome]
-              [(Math/pow (max 0.000000001
-                              (- 4 
-                                 (reduce + 
-                                         (mapv #(Math/abs (- %2 
-                                                             (first (net/evaluate-neural-net-with-activation-cycles genome %1 10))))
-                                               [[0 0][1 0][0 1][1 1]]
-                                               [0 1 1 0])))) 2) 
-               (and (== 0 (Math/round (first (net/evaluate-neural-net-with-activation-cycles genome [0 0] 100))))
-                    (== 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles genome [1 0] 100))))
-                    (== 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles genome [0 1] 100))))
-                    (== 0 (Math/round (first (net/evaluate-neural-net-with-activation-cycles genome [1 1] 100)))))])))
+              {:fitness (Math/pow (max 0.000000001
+                                       (- 4 
+                                          (reduce + 
+                                                  (mapv #(Math/abs (- %2 
+                                                                      (first (net/evaluate-neural-net-with-activation-cycles genome %1 10))))
+                                                        [[0 0][1 0][0 1][1 1]]
+                                                        [0 1 1 0])))) 2) 
+               :solved? (and (== 0 (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                       genome [0 0] 100))))
+                             (== 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                       genome [1 0] 100))))
+                             (== 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                       genome [0 1] 100))))
+                             (== 0 (Math/round (first (net/evaluate-neural-net-with-activation-cycles 
+                                                       genome [1 1] 100)))))
+               :success-rate (/ (+ (- 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                            genome [0 0] 100))))
+                                   (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                       genome [1 0] 100)))
+                                   (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                       genome [0 1] 100)))
+                                   (- 1 (Math/round (first (net/evaluate-neural-net-with-activation-cycles
+                                                            genome [1 1] 100)))))
+                                4)})))
   (evo/evolution))
 
 (defn maxpos 
@@ -44,13 +60,112 @@
 (defn make-classification-fitness
   [inputs outputs]
   (fn [genome]
-    (let [evals (mapv #(net/evaluate-neural-net-with-activation-cycles genome % 100) inputs)]
-      [(double (max 0.000000001 (- 100 (/ (reduce + (mapv (fn [evaluated out] 
-                                                            (/ (- (reduce #(+ %1 (* %2 %2)) 0 evaluated) 
-                                                                  (* (nth evaluated out) (nth evaluated out)))
-                                                               (count evaluated)))
-                                                          evals outputs))
-                                          (count evals)))))
-       (reduce #(and %1 %2) 
-               (mapv #(= (maxpos )
-                         %2) evals outputs))])))
+    (let [evals (mapv #(net/evaluate-neural-net-with-activation-cycles genome % 100) inputs)
+          succ (mapv #(= (maxpos %1) %2) evals outputs)]
+      {#_:fitness #_(double (max 0.000000001 
+                                 (- 100 (/ (reduce + 
+                                                   (mapv (fn [evaluated out] 
+                                                           (/ (- (reduce #(+ %1 (* %2 %2)) 0 evaluated) 
+                                                                 (* (nth evaluated out) (nth evaluated out)))
+                                                              (count evaluated)))
+                                                         evals outputs))
+                                           (count evals)))))
+
+       :solved (reduce #(and %1 %2) succ)
+       :success-rate (/ (reduce #(+ %1 (if %2 1 0)) 0  succ)
+                        (count succ))
+       :fitness (double (Math/pow (/ (reduce #(+ %1 (if %2 1 0)) 0  succ)
+                                     (count succ)) 2))})))
+
+
+
+(defn iris
+  []
+  (let [dataset (co/to-matrix (io/read-dataset (str dataset-prefix "iris.data")))]
+             (dosync
+              (ref-set ep/c3 0.3)
+              (ref-set ep/target-species 0)
+              (ref-set ep/weight-range [-1.0 1.0])
+              (ref-set ep/clamp-weight-factor 1.0)
+              (ref-set ep/input-count 4)
+              (ref-set ep/output-count 3)
+              (ref-set ep/fitness-fun (make-classification-fitness 
+                                       (co/to-vect  (co/sel dataset :cols [0 1 2 3]))
+                                       (mapv #(int %) (co/to-vect  (co/sel dataset :cols [4]))))))
+             (evo/evolution)))
+;(gui/show-options)
+(defn wine 
+  []
+  (let [dataset (co/to-matrix (io/read-dataset (str dataset-prefix "wine.data")))]
+    (dosync 
+     (ref-set ep/input-count 13)
+     (ref-set ep/output-count 3)
+     (ref-set ep/population-size 150)
+     (ref-set ep/generation-count 100)
+     (ref-set ep/clamp-weight-factor 0)
+     (ref-set ep/target-species 0)
+     (ref-set ep/dt-delta 0.1)
+     (ref-set ep/visualize-genome-with [])
+     (ref-set ep/weight-range [-5.0 5.0])
+     (ref-set ep/mutate-weights-perturb-sigma 2.5)
+     (ref-set ep/add-node-prob 0.03)
+     (ref-set ep/add-connection-prob 0.05)
+     (ref-set ep/connection-density 0.0)
+     (ref-set ep/c3 0.3)
+     (ref-set ep/dt 3.0)
+     (ref-set ep/tournament-k 1)
+     (ref-set ep/fitness-fun
+              (make-classification-fitness (co/to-vect  (co/sel dataset :cols (range 1 14)))
+                                           (mapv #(int (dec %)) (co/to-vect  (co/sel dataset :cols 0))))))
+    (evo/evolution)))
+#_(dotimes [_ 10]
+    (wine))
+
+(defn glass 
+  []
+  (let [dataset (co/to-matrix (io/read-dataset (str dataset-prefix "glass.data")))]
+    (gui/set-new-settings {:mate-by-choosing-prob 0.6, :add-node-prob 0.03, :c1 1.0, :weight-range [-1.0 1.0], :c2 1.0, :dt 3.0, :connection-density 0.0, :mutation-prob 0.25, :survival-rate-in-species 0.2, :mutate-weights-perturb-sigma 0.5, :mate-only-prob 0.2, :mutate-weights-prob 0.8, :old-age-multiplier 0.2, :mutate-only-prob 0.25, :disable-in-crossover 0.75, :elitism true, :c3 0.3, :old-age 30, :clamp-weight-factor 1.0, :population-size 450, :stagnation-age 15, :target-species 0, :mutate-weights-perturb-prob 0.9, :crossover-prob 0.75, :dt-delta 0.2, :tournament-k 1, :interspecies-mating-prob 0.001, :min-elitism-size 5, :add-connection-prob 0.3, :young-age 10, :visualize-genome-with [], :generation-count 100, :young-age-multiplier 1})
+    (dosync 
+     ;; (ref-set ep/input-count 9)
+     ;; (ref-set ep/output-count 7)
+     ;;(ref-set ep/population-size 150)
+     ;; (ref-set ep/generation-count 1000)
+     ;; (ref-set ep/clamp-weight-factor 2)
+     ;; (ref-set ep/target-species 0)
+     ;; (ref-set ep/dt-delta 0.2)
+     ;; (ref-set ep/visualize-genome-with [])
+     ;; (ref-set ep/weight-range [-1.0 1.0])
+     ;; (ref-set ep/mutate-weights-perturb-sigma 0.5)
+     ;;(ref-set ep/add-node-prob 0.01)
+    ;; (ref-set ep/add-connection-prob 0.02)
+     ;; (ref-set ep/connection-density 0.0)
+     ;; (ref-set ep/c3 0.3)
+     ;; (ref-set ep/dt 3.0)
+     ;; (ref-set ep/tournament-k 1)     
+     (ref-set ep/fitness-fun
+              (make-classification-fitness (co/to-vect  (co/sel dataset :cols (range 1 9)))
+                                           (mapv #(int (dec %)) (co/to-vect  (co/sel dataset :cols 10))))))
+    (gui/print-settings)
+    (evo/evolution)))
+(glass)
+
+
+(defn- make-regression-fitness
+  [input output]
+  (fn [genome]
+    (let [evals (mapv #(net/evaluate-neural-net-with-activation-cycles genome % 100) inputs)
+          succ (mapv #(= %1 %2) evals outputs)]
+      {:fitness (double (max 0.000000001 
+                             (- 100 (/ (reduce + 
+                                               (mapv (fn [evaluated out] 
+                                                       (/ (- (reduce #(+ %1 (* %2 %2)) 0 evaluated) 
+                                                             (* (nth evaluated out) (nth evaluated out)))
+                                                          (count evaluated)))
+                                                     evals outputs))
+                                       (count evals)))))
+
+       :solved (reduce #(and %1 %2) succ)
+       :success-rate (/ (reduce #(+ %1 (if %2 1 0)) 0  succ)
+                        (count succ))})))
+
+

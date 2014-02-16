@@ -12,7 +12,8 @@
      genome
      raw-fitness
      fitness
-     solved?]
+     solved?
+     success-rate]
   GraphvizEnabled
   (save-image [this filename]
     (save-image (:genome this) filename))
@@ -32,5 +33,5 @@
   (if (not (or genome (and input output)))
     (throw (Error. "Either genome or input and output must be supplied")))
   (->Individual (or id (swap! ep/individuals-count inc))
-                (or genome (genome/initial-genome input output)) 0.0 0.0 false))
+                (or genome (genome/initial-genome input output)) 0.0 0.0 false 0.0))
 
