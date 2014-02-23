@@ -7,7 +7,9 @@
                  [rhizome "0.2.0"]
                  [aysylu/loom "0.4.2"]
                  [incanter "1.5.4"]
+                 [com.taoensso/nippy "2.5.2"]
                  [seesaw "1.4.4"]]
   :aot [loom.graph]
+  :jvm-opts ^:replace []
   :java-source-paths ["java/src"] 
   :main neat.evolution2)

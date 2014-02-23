@@ -79,19 +79,19 @@
 
 (defn- weight-to-prop
   [weight [min max]]
-  (let [neg-step (/ 2 (- min))
-        pos-step (/ 2 max)
+  (let [neg-step (/ 4 (- min))
+        pos-step (/ 4 max)
         neg-color-step (/ 100 (- min))
         pos-color-step (/ 100 max)]
     
     (if (< weight 0)
       {:penwidth (str (float (+ 1 (* (- weight) neg-step))))
-       :color (format "#ff%02x%02x"
+       :color (format "#cc%02x%02x"
                       (int (- 101  (* (- weight) neg-color-step)))
                       (int (- 101 (* (- weight) neg-color-step))))}
       {:penwidth (str (float (+ 1 (* weight pos-step))))
-       :color (format "#%02x%02x%02x" 
-                      (int (- 101 (* weight pos-color-step)))
+       :color (format "#%02x%02xcc" 
+                      #_(int (- 101 (* weight pos-color-step)))
                       (int (- 101 (* weight pos-color-step)))
                       (int (- 101 (* weight pos-color-step))))})))
 

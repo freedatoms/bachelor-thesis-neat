@@ -40,6 +40,20 @@
   :type :int
   :value [1])
 
+(defoption input-count
+  "Number of inputs"
+  2
+  :type :int
+  :value [1])
+
+(defoption output-count
+  "Number of outputs"
+  1
+  :type :int
+  :value [1])
+
+
+
 (defoption c1
   "Excess gene importance in delta function"
    1.0
@@ -222,13 +236,6 @@
   "used during add-node and add-connection mutations to enhance gene-matching"
   (atom {}))
 
-(def input-count
-  "Number of inputs"
-  (ref 2))
-
-(def output-count
-  "Number of outputs"
-  (ref 1))
 
 
 ;; Functions
