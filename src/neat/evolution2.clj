@@ -11,7 +11,7 @@
   (:use [neat
          graphviz-enabled]))
 
-(def file-prefix "/home/frydatom/Dokumenty/FIT/Bakalářka/results/")
+(def file-prefix "/home/frydatom/Dokumenty/FIT/Bakalářka/results-nx2/")
 
 (defn- mean 
   [coll]
@@ -64,6 +64,7 @@
                   @ep/innovation-number
                   (float (or (:success-rate stats) -1))
                   max-success)
+          (flush)
           (let [most-succ (:most-successful stats)]
             (do-with-best most-succ (format filename (:generation stats) (float (:success-rate most-succ))))
             (u/freeze-to-file (str (format filename (:generation stats) (float (:success-rate most-succ))) ".ind") most-succ)

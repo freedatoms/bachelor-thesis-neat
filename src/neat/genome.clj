@@ -149,7 +149,7 @@
          :options {:splines "true"
                    :dpi "50"
                    :rankdir "BT"
-                   :layout "neato"
+                   :layout "fdp"
                    :mode "hier"
                    :sep "1"
                    :overlap "false"

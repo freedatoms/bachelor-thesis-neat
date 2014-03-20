@@ -12,4 +12,4 @@
   :aot [loom.graph]
   :jvm-opts ^:replace []
   :java-source-paths ["java/src"] 
-  :main neat.evolution2)
+  :main neat.experiments)
