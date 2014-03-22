@@ -117,29 +117,29 @@
                                       :width "0.4"
                                       :height "0.4"}
                                      (case (:type (nth (:node-genes g) (dec x)))
-                                       :input [[:fillcolor "#55ff55"][:rank "source"] [:pos (format "%f,0!" (+ (dec x)
-                                                                                                               (if (< input-cnt output-cnt)
-                                                                                                                 (float (/ (Math/abs (- input-cnt output-cnt)) 2))
-                                                                                                                 0.0)))]
-                                               [:pin "true"]]
-                                       :bias [[:fillcolor  "#aaffff"][:rank "source"] [:pos (format "%f,0!" (+ (dec x)
-                                                                                                               (if (< input-cnt output-cnt)
-                                                                                                                 (float (/ (Math/abs (- input-cnt output-cnt)) 2))
-                                                                                                                 0.0)))]
-                                              [:pin "true"]]
+                                       :input [[:fillcolor "#55ff55"][:rank "source"] [:pos (format "%d.0,0.0!" (int (+ (dec x)
+                                                                                                                        (if (< input-cnt output-cnt)
+                                                                                                                          (float (/ (Math/abs (- input-cnt output-cnt)) 2))
+                                                                                                                          0.0))))]
+                                               ]
+                                       :bias [[:fillcolor  "#aaffff"][:rank "source"] [:pos (format "%d.0,0.0!" (int (+ (dec x)
+                                                                                                                        (if (< input-cnt output-cnt)
+                                                                                                                          (float (/ (Math/abs (- input-cnt output-cnt)) 2))
+                                                                                                                          0.0))))]
+                                              ]
                                        :hidden [[:fillcolor "gray"]]
-                                       :output [[:fillcolor  "#ff5555"][:rank "sink"] [:pos (format "%f,10!" (+ (- x (inc input-cnt))
-                                                                                                                (if (> input-cnt output-cnt)
-                                                                                                                  (float (/ (Math/abs (- input-cnt output-cnt)) 2))
-                                                                                                                  0.0)))] 
-                                                [:pin "true"]]
+                                       :output [[:fillcolor  "#ff5555"][:rank "sink"] [:pos (format "%d.0,10.0!" (int (+ (- x (inc input-cnt))
+                                                                                                                         (if (> input-cnt output-cnt)
+                                                                                                                           (float (/ (Math/abs (- input-cnt output-cnt)) 2))
+                                                                                                                           0.0))))] 
+                                                ]
                                        [[:filcolor "white"]]))))
          :edge->descriptor (fn [in out]
                              (case in
                                :node-gene {:style "invis"}
                                (weight-to-prop (weights [in out]) wr)))
          :node->cluster {:node-gene :gene,
-                                :conn-gene :gene}
+                         :conn-gene :gene}
          
          :cluster->descriptor (fn [cluster]
                                 (case cluster
@@ -149,10 +149,9 @@
          :options {:splines "true"
                    :dpi "50"
                    :rankdir "BT"
-                   :layout "fdp"
                    :mode "hier"
-                   :sep "1"
-                   :overlap "false"
+                   :layout "fdp"
+                   :overlap "scale"
                    })))
 
 

@@ -1,3 +1,4 @@
+
 (ns neat.evolution2
   (:require [neat
              [population2 :as pop]
@@ -11,7 +12,7 @@
   (:use [neat
          graphviz-enabled]))
 
-(def file-prefix "/home/frydatom/Dokumenty/FIT/Bakalářka/results-nx2/")
+(def file-prefix "/home/frydatom/Dokumenty/FIT/Bakalářka/results-neat/")
 
 (defn- mean 
   [coll]

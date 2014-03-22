@@ -186,7 +186,7 @@
 (defn iris
   []
   (let [dataset (co/to-matrix (io/read-dataset (str dataset-prefix "iris.data")))]
-    (gui/set-new-settings {:mate-by-choosing-prob 0.6, :add-node-prob 0.03, :c1 1.0, :output-count 3, :weight-range [-1.0 1.0], :c2 1.0, :dt 3.0, :connection-density 0.0, :mutation-prob 0.25, :survival-rate-in-species 0.2, :mutate-weights-perturb-sigma 2.5, :mate-only-prob 0.2, :mutate-weights-prob 0.8, :old-age-multiplier 0.2, :mutate-only-prob 0.25, :disable-in-crossover 0.75, :elitism true, :c3 0.3, :old-age 30, :clamp-weight-factor 1.0, :population-size 150, :stagnation-age 15, :target-species 0, :mutate-weights-perturb-prob 0.9, :crossover-prob 0.75, :dt-delta 0.4, :tournament-k 1, :interspecies-mating-prob 0.001, :min-elitism-size 5, :add-connection-prob 0.05, :input-count 4, :young-age 10, :visualize-genome-with [], :generation-count 100, :young-age-multiplier 1.2})
+    (gui/set-new-settings {:mate-by-choosing-prob 0.6, :add-node-prob 0.03, :c1 1.0, :output-count 3, :weight-range [-1.0 1.0], :c2 1.0, :dt 3.0, :connection-density 0.0, :mutation-prob 0.25, :survival-rate-in-species 0.2, :mutate-weights-perturb-sigma 2.5, :mate-only-prob 0.2, :mutate-weights-prob 0.8, :old-age-multiplier 0.2, :mutate-only-prob 0.25, :disable-in-crossover 0.75, :elitism true, :c3 0.3, :old-age 30, :clamp-weight-factor 1.0, :population-size 450, :stagnation-age 15, :target-species 0, :mutate-weights-perturb-prob 0.9, :crossover-prob 0.75, :dt-delta 0.4, :tournament-k 1, :interspecies-mating-prob 0.001, :min-elitism-size 5, :add-connection-prob 0.05, :input-count 4, :young-age 10, :visualize-genome-with [], :generation-count 100, :young-age-multiplier 1.2})
     (dosync
      (ref-set ep/fitness-fun (make-classification-fitness 
                               (normalize-columns (co/to-vect (co/sel dataset :cols [0 1 2 3])))
@@ -196,7 +196,7 @@
 (defn wine 
   []
   (let [dataset (co/to-matrix (io/read-dataset (str dataset-prefix "wine.data")))]
-    (gui/set-new-settings {:mate-by-choosing-prob 0.6, :add-node-prob 0.03, :c1 1.0, :output-count 3, :weight-range [-5.0 5.0], :c2 1.0, :dt 3.0, :connection-density 0.0, :mutation-prob 0.25, :survival-rate-in-species 0.2, :mutate-weights-perturb-sigma 2.5, :mate-only-prob 0.2, :mutate-weights-prob 0.8, :old-age-multiplier 0.2, :mutate-only-prob 0.25, :disable-in-crossover 0.75, :elitism true, :c3 0.3, :old-age 30, :clamp-weight-factor 0, :population-size 150, :stagnation-age 15, :target-species 0, :mutate-weights-perturb-prob 0.9, :crossover-prob 0.75, :dt-delta 0.1, :tournament-k 1, :interspecies-mating-prob 0.001, :min-elitism-size 5, :add-connection-prob 0.05, :input-count 13, :young-age 10, :visualize-genome-with [], :generation-count 100, :young-age-multiplier 1.2})
+    (gui/set-new-settings {:mate-by-choosing-prob 0.6, :add-node-prob 0.03, :c1 1.0, :output-count 3, :weight-range [-5.0 5.0], :c2 1.0, :dt 3.0, :connection-density 0.0, :mutation-prob 0.25, :survival-rate-in-species 0.2, :mutate-weights-perturb-sigma 2.5, :mate-only-prob 0.2, :mutate-weights-prob 0.8, :old-age-multiplier 0.2, :mutate-only-prob 0.25, :disable-in-crossover 0.75, :elitism true, :c3 0.3, :old-age 30, :clamp-weight-factor 0, :population-size 450, :stagnation-age 15, :target-species 0, :mutate-weights-perturb-prob 0.9, :crossover-prob 0.75, :dt-delta 0.1, :tournament-k 1, :interspecies-mating-prob 0.001, :min-elitism-size 5, :add-connection-prob 0.05, :input-count 13, :young-age 10, :visualize-genome-with [], :generation-count 100, :young-age-multiplier 1.2})
     (dosync 
      (ref-set ep/fitness-fun
               (make-classification-fitness (normalize-columns (co/to-vect (co/sel dataset :cols (range 1 14))))
@@ -296,13 +296,13 @@
                        (.revalidate fr))))))
 
 (dotimes [_ 20]
-    ;; (prn :iris----------------------------------------------)
-    ;; (iris)
-    ;; (prn :wine----------------------------------------------)
-    ;; (wine)
+     (prn :iris----------------------------------------------)
+     (iris)
+     (prn :wine----------------------------------------------)
+     (wine)
     ;; (prn :yacht---------------------------------------------)
     ;; (regression-yacht)
-    (prn :maze----------------------------------------------)
-    (maze)
+   ;; (prn :maze----------------------------------------------)
+    ;;(maze)
     #_(prn :glass---------------------------------------------)
     #_(glass))
